@@ -1,0 +1,1 @@
+{"type":"container","id":"root","props":{},"layout":{"direction":"column","align_items":"center","justify_content":"start"},"children":[{"type":"label","id":"greeting","props":{"text":"Hello World"},"layout":{"width":200,"height":30},"children":[]},{"type":"button","id":"click_me","props":{"text":"Click Me"},"layout":{"width":120,"height":40},"children":[]}]}
