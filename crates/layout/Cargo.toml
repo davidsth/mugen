@@ -1,0 +1,9 @@
+[package]
+name = "mugen-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Mugen constraint layout (Step 3 placeholder)."
+
+[dependencies]
+mugen-protocol = { path = "../protocol" }

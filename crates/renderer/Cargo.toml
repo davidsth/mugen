@@ -1,0 +1,16 @@
+[package]
+name = "mugen-renderer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Mugen renderer (Step 3 placeholder)."
+
+[dependencies]
+mugen-protocol = { path = "../protocol" }
+mugen-layout = { path = "../layout" }
+
+# Add in Step 3 (macOS: Metal backend via wgpu, Xcode command-line tools required):
+# wgpu = "26"
+# winit = "0.30"
+# cosmic-text = "0.14"
+# accesskit = "0.19"

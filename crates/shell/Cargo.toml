@@ -1,0 +1,21 @@
+[package]
+name = "mugen-shell"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Mugen shell: window, joined-app list, lifecycle, local app adding."
+
+[[bin]]
+name = "mugen"
+path = "src/main.rs"
+
+[dependencies]
+mugen-protocol = { path = "../protocol" }
+winit = "0.30"
+softbuffer = "0.4"
+
+# Step 3/5, when the wgpu renderer lands:
+# mugen-layout = { path = "../layout" }
+# mugen-renderer = { path = "../renderer" }
+# tokio = { version = "1", features = ["full"] }
+# tokio-tungstenite = "0.26"  # WebSocket transport for v0

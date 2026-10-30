@@ -1,0 +1,6 @@
+[package]
+name = "mugen-protocol"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Mugen v0 protocol types: snapshot, patch, event, and validation. No external dependencies by design."
