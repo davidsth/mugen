@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="description" content="Mugen is a Rust desktop client that renders Crystal apps without HTML, CSS, or JavaScript. No URLs. Identity by key. Infinite apps to join." />
+<link rel="icon" href="data:," />
+<title>Mugen — Infinite apps. No URLs.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+JP:wght@600;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F3F1EB;
+    --bg-2:#FFFFFF;
+    --ink:#131311;
+    --ink-2:#3E3D38;
+    --muted:#6B6961;
+    --line:#DDD9CE;
+    --line-strong:#131311;
+    --accent:#E8480C;
+    --accent-dark:#C93A06;
+    --accent-soft:#FFE9E0;
+    --teal:#0E7569;
+    --teal-soft:#DDF0EC;
+    --gold:#D99A06;
+    --panel:#FFFFFF;
+    --panel-2:#EAE7DD;
+    --code-bg:#141412;
+    --code-ink:#F3F1EB;
+    --code-muted:#9C998E;
+    --shadow:0 20px 50px rgba(19,19,17,.14);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#101010;
+      --bg-2:#171716;
+      --ink:#F2F0E9;
+      --ink-2:#D8D5CB;
+      --muted:#A3A097;
+      --line:#2C2C29;
+      --line-strong:#F2F0E9;
+      --accent:#FF5A1F;
+      --accent-dark:#FF5A1F;
+      --accent-soft:#3A1E11;
+      --teal:#3EC9B6;
+      --teal-soft:#12302B;
+      --panel:#171716;
+      --panel-2:#1E1E1C;
+      --code-bg:#090909;
+      --code-ink:#F2F0E9;
+      --code-muted:#8E8B82;
+      --shadow:0 20px 50px rgba(0,0,0,.45);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{animation:none!important; transition:none!important} }
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55}
+  a{color:inherit}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+  .jp{font-family:"Noto Serif JP",serif}
+
+  /* ---------- top bar ---------- */
+  .topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .topbar-in{max-width:1180px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:20px}
+  .brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;font-weight:900;letter-spacing:.06em;font-size:19px}
+  .brand .jp{font-size:15px;color:var(--accent);letter-spacing:0}
+  .brand small{font-family:"IBM Plex Mono",monospace;font-weight:500;letter-spacing:.08em;font-size:10px;color:var(--muted)}
+  .topnav{margin-left:auto;display:flex;align-items:center;gap:22px;font-size:14px;font-weight:600}
+  .topnav a{text-decoration:none;color:var(--ink-2)}
+  .topnav a:hover{color:var(--accent)}
+  .topnav a.btn{color:var(--bg)}
+  .topnav a.btn:hover{color:#fff}
+  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:14px;border:1.5px solid var(--line-strong);padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--bg);transition:transform .15s ease, background .15s ease}
+  .btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.ghost:hover{background:var(--ink);color:var(--bg)}
+  .btn.small{padding:8px 14px;font-size:13px}
+  @media(max-width:760px){ .topnav a:not(.btn){display:none} .brand small{display:none} }
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .hero-kanji{position:absolute;right:-30px;top:-70px;font-size:340px;line-height:1;color:var(--ink);opacity:.055;pointer-events:none;user-select:none;font-weight:900}
+  @media(max-width:760px){ .hero-kanji{font-size:190px;top:-30px;right:-14px} }
+  .hero-grid{position:relative;display:grid;grid-template-columns:1.02fr .98fr;gap:44px;padding:64px 0 56px;align-items:start}
+  @media(max-width:940px){ .hero-grid{grid-template-columns:1fr;padding:44px 0 40px} }
+  .hero-eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;letter-spacing:.04em;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px}
+  .hero-eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block}
+  h1{font-size:clamp(42px,6.2vw,76px);line-height:.98;letter-spacing:-.025em;font-weight:900;margin:22px 0 20px}
+  h1 .accent{color:var(--accent)}
+  .hero-sub{font-size:clamp(17px,2vw,20px);color:var(--ink-2);max-width:34ch;margin:0 0 14px}
+  .hero-sub strong{color:var(--ink)}
+  .hero-note{font-size:14.5px;color:var(--muted);max-width:46ch;margin:0 0 28px}
+  .hero-ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .hero-ctas .btn{padding:13px 20px;font-size:15px}
+  .hero-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:36px;border-top:1px solid var(--line);max-width:520px}
+  .hero-facts div{padding:14px 16px 4px 0}
+  .hero-facts dt{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase}
+  .hero-facts dd{margin:3px 0 0;font-weight:800;font-size:16px}
+
+  /* ---------- client mock ---------- */
+  .client{border:1.5px solid var(--line-strong);border-radius:18px;background:var(--panel);box-shadow:var(--shadow);overflow:hidden}
+  .client-bar{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot.r{background:#E8480C}.dot.y{background:#D99A06}.dot.g{background:#0E7569}
+  .client-bar .mono{margin-left:8px;font-size:12px;color:var(--muted)}
+  .client-bar .live{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--teal);font-weight:600}
+  .client-body{display:grid;grid-template-columns:172px 1fr;min-height:342px}
+  @media(max-width:560px){ .client-body{grid-template-columns:1fr} }
+  .rail{border-right:1px solid var(--line);padding:14px 10px;background:var(--bg-2)}
+  @media(max-width:560px){ .rail{border-right:none;border-bottom:1px solid var(--line)} .rail-list{display:grid;grid-template-columns:repeat(3,1fr);gap:6px} }
+  .rail-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;padding:0 6px 8px}
+  .rail-btn{width:100%;display:flex;align-items:center;gap:9px;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);font:inherit;font-size:13.5px;font-weight:700;padding:9px 8px;border-radius:10px;cursor:pointer}
+  .rail-btn .glyph{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:13px;color:#fff;flex:none}
+  .rail-btn small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+  .rail-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--line)}
+  .rail-btn:focus-visible,.task-check:focus-visible,.add-row button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .rail-discover{margin-top:12px;border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:12px;color:var(--muted);line-height:1.45}
+  .rail-discover strong{color:var(--ink);display:block;font-size:12.5px}
+  .pane{padding:20px 20px 16px}
+  .pane-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .pane-head h3{margin:0;font-size:21px;letter-spacing:-.01em}
+  .pane-head p{margin:2px 0 0;color:var(--muted);font-size:13px}
+  .verified{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-soft);border-radius:999px;padding:5px 10px;white-space:nowrap}
+  .task-list{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:8px}
+  .task{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14.5px;font-weight:600;background:var(--bg-2)}
+  .task.done span{text-decoration:line-through;color:var(--muted)}
+  .task-check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line-strong);background:transparent;cursor:pointer;flex:none;display:grid;place-items:center;color:#fff;font-size:13px;padding:0}
+  .task.done .task-check{background:var(--teal);border-color:var(--teal)}
+  .task .tag{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted)}
+  .add-row{display:flex;gap:8px;margin-top:12px}
+  .add-row input{flex:1;min-width:0;font:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);color:var(--ink)}
+  .add-row button{font:inherit;font-weight:700;font-size:14px;border:none;border-radius:10px;background:var(--ink);color:var(--bg);padding:10px 16px;cursor:pointer}
+  .add-row button:hover{background:var(--accent);color:#fff}
+  .note-card{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--bg-2);margin-top:14px}
+  .note-card h4{margin:0 0 6px;font-size:15px}
+  .note-card p{margin:0;color:var(--ink-2);font-size:14px}
+  .log{border-top:1px solid var(--line);background:var(--code-bg);color:var(--code-ink);padding:12px 14px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.7;min-height:86px}
+  .log .k{color:#FF8A5C}.log .k2{color:#3EC9B6}.log .dim{color:var(--code-muted)}
+  .client-caption{font-size:13px;color:var(--muted);margin:12px 2px 0}
+  .client-caption strong{color:var(--ink)}
+
+  /* ---------- strip ---------- */
+  .strip{border-bottom:1px solid var(--line);background:var(--ink);color:var(--bg)}
+  .strip-in{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px 26px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;letter-spacing:.03em}
+  .strip-in span::before{content:"✕ ";color:var(--accent)}
+  .strip-in span.yes::before{content:"→ ";color:#3EC9B6}
+
+  /* ---------- sections ---------- */
+  section.block{padding:72px 0;border-bottom:1px solid var(--line)}
+  @media(max-width:760px){ section.block{padding:52px 0} }
+  .sec-head{max-width:720px;margin-bottom:36px}
+  .sec-head .mono{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.05em}
+  h2{font-size:clamp(30px,4vw,44px);line-height:1.05;letter-spacing:-.02em;font-weight:900;margin:10px 0 12px}
+  .sec-head p{color:var(--ink-2);font-size:17px;margin:0}
+
+  /* compare */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:820px){ .compare{grid-template-columns:1fr} }
+  .compare-card{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:26px}
+  .compare-card.win{border:1.5px solid var(--line-strong);background:var(--bg-2)}
+  .compare-card h3{margin:0 0 4px;font-size:20px}
+  .compare-card .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+  .compare-card ul{list-style:none;margin:0;padding:0;display:grid;gap:0}
+  .compare-card li{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:15px;color:var(--ink-2)}
+  .compare-card li:first-child{border-top:none;padding-top:2px}
+  .compare-card li strong{color:var(--ink)}
+  .mark{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:900;margin-top:1px}
+  .mark.no{background:var(--accent-soft);color:var(--accent)}
+  .mark.ok{background:var(--teal-soft);color:var(--teal)}
+
+  /* how it works */
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  @media(max-width:1020px){ .steps{grid-template-columns:repeat(2,1fr)} }
+  @media(max-width:560px){ .steps{grid-template-columns:1fr} }
+  .step{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:20px}
+  .step .num{font-family:"Noto Serif JP",serif;font-weight:900;font-size:26px;color:var(--accent)}
+  .step h3{margin:8px 0 6px;font-size:16.5px}
+  .step p{margin:0;font-size:14px;color:var(--ink-2)}
+  .step .mono{display:block;margin-top:12px;font-size:11px;color:var(--muted)}
+  .arch{margin-top:22px;border:1.5px solid var(--line-strong);border-radius:18px;background:var(--panel);padding:24px}
+  .arch-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:14px;align-items:stretch}
+  @media(max-width:860px){ .arch-flow{grid-template-columns:1fr} .arch-arrow{transform:rotate(90deg);justify-self:center} }
+  .arch-box{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--bg-2)}
+  .arch-box h4{margin:0 0 6px;font-size:15px}
+  .arch-box p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .arch-box ul{margin:8px 0 0;padding-left:16px;font-size:13px;color:var(--ink-2)}
+  .arch-arrow{align-self:center;font-size:22px;color:var(--accent);font-weight:900}
+  .proto-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .proto-tab{font:inherit;font-weight:700;font-size:13.5px;border:1px solid var(--line-strong);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}
+  .proto-tab[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .proto-panel{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg-2);padding:18px;font-size:15px;color:var(--ink-2);max-width:760px}
+  .proto-panel strong{color:var(--ink)}
+  .proto-panel .mono{font-size:12px;color:var(--muted);display:block;margin-top:8px}
+
+  /* code / creators */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  @media(max-width:900px){ .split{grid-template-columns:1fr} }
+  pre.code{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:20px;overflow-x:auto;font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.65;margin:0}
+  pre.code .c{color:var(--code-muted)} pre.code .s{color:#FFB08A} pre.code .k{color:#7EDDD0}
+  .repo-tree{background:var(--panel);border:1px solid var(--line);color:var(--ink-2)}
+  .repo-tree .c{color:var(--muted)}
+  .creator-points{display:grid;gap:18px}
+  .creator-points h3{margin:0 0 5px;font-size:18px}
+  .creator-points p{margin:0;color:var(--ink-2);font-size:15px}
+  .creator-points .n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--accent);font-weight:600}
+
+  /* identity */
+  .id-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:24px;align-items:start}
+  @media(max-width:900px){ .id-grid{grid-template-columns:1fr} }
+  .id-card{border:1.5px solid var(--line-strong);border-radius:18px;background:var(--panel);padding:24px;box-shadow:var(--shadow)}
+  .id-card-top{display:flex;gap:14px;align-items:center}
+  .id-avatar{width:52px;height:52px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:900;font-size:20px;flex:none}
+  .id-card h3{margin:0;font-size:20px}
+  .id-card .by{color:var(--muted);font-size:13.5px}
+  .finger{margin:18px 0;padding:12px;border:1px dashed var(--line);border-radius:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-2);word-break:break-all;background:var(--bg-2)}
+  .finger b{color:var(--muted);display:block;font-size:10.5px;letter-spacing:.07em;margin-bottom:4px}
+  .perms{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:6px 11px;background:var(--bg-2)}
+  .chip::before{content:"✓ ";color:var(--teal)}
+  .id-actions{display:flex;gap:10px;margin-top:20px}
+  .id-actions .btn{flex:1;justify-content:center}
+  .sec-list{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+  .sec-list li{display:flex;gap:14px}
+  .sec-list .mark{margin-top:2px}
+  .sec-list h3{margin:0 0 3px;font-size:16.5px}
+  .sec-list p{margin:0;color:var(--ink-2);font-size:14.5px}
+
+  /* roadmap */
+  .road{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
+  .road-row{display:grid;grid-template-columns:64px 1fr auto;gap:16px;align-items:center;padding:18px 22px;border-top:1px solid var(--line)}
+  .road-row:first-child{border-top:none}
+  @media(max-width:640px){ .road-row{grid-template-columns:44px 1fr} .road-tag{grid-column:2} }
+  .road-row .rn{font-family:"Noto Serif JP",serif;font-weight:900;font-size:22px;color:var(--accent)}
+  .road-row h3{margin:0;font-size:16.5px}
+  .road-row p{margin:2px 0 0;color:var(--muted);font-size:14px}
+  .road-tag{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--ink-2);white-space:nowrap}
+  .road-tag.first{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  /* start */
+  .start-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  @media(max-width:900px){ .start-grid{grid-template-columns:1fr} }
+  .term{background:var(--code-bg);border-radius:14px;padding:20px;font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.8;color:var(--code-ink);overflow-x:auto}
+  .term .dim{color:var(--code-muted)} .term .p{color:#7EDDD0}
+  .copy-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center}
+  .copy-btn{font:inherit;font-weight:700;font-size:13.5px;border:1.5px solid var(--line-strong);background:var(--ink);color:var(--bg);border-radius:999px;padding:9px 16px;cursor:pointer}
+  .copy-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+  .copy-done{font-size:13px;color:var(--teal);font-weight:700}
+  .req-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .req-list li{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px 16px;font-size:14.5px;color:var(--ink-2)}
+  .req-list strong{color:var(--ink);display:block;font-size:15px}
+  .req-list .mono{font-size:12px;color:var(--muted)}
+
+  /* final */
+  .final{padding:84px 0;text-align:left;position:relative;overflow:hidden}
+  .final .jp-big{font-size:clamp(60px,10vw,120px);font-weight:900;line-height:1;color:var(--accent)}
+  .final h2{margin:14px 0 10px}
+  .final p{color:var(--ink-2);font-size:17px;max-width:56ch;margin:0 0 26px}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px}
+  .foot{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;font-size:13.5px;color:var(--muted)}
+  .foot a{font-weight:700;color:var(--ink);text-decoration:none}
+  .foot a:hover{color:var(--accent)}
+  .foot .right{margin-left:auto}
+  @media(max-width:640px){ .foot .right{margin-left:0} }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#top">MUGEN <span class="jp">無限</span> <small>INFINITE / LIMITLESS</small></a>
+    <nav class="topnav" aria-label="Mugen">
+      <a href="#why">Why</a>
+      <a href="#how">How it works</a>
+      <a href="#creators">For creators</a>
+      <a href="#start">Start building</a>
+      <a class="btn small" href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="jp hero-kanji" aria-hidden="true">無限</div>
+    <div class="wrap hero-grid">
+      <div>
+        <span class="hero-eyebrow"><i></i> EARLY DEVELOPMENT — BUILDING IN THE OPEN</span>
+        <h1>Infinite apps.<br /><span class="accent">No URLs.</span><br />No web pages.</h1>
+        <p class="hero-sub">Mugen is a desktop client that <strong>replaces the browser</strong> — a custom rendering engine written in Rust, with no HTML, no CSS, and no JavaScript.</p>
+        <p class="hero-note">Creators host their own servers and build apps in Crystal. You discover apps, join the ones you trust, and Mugen renders them natively. An app's identity is its publisher's key — never a domain you have to spell, guess, or hope hasn't been hijacked.</p>
+        <div class="hero-ctas">
+          <a class="btn" href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">View the repo on GitHub ↗</a>
+          <a class="btn ghost" href="#how">See how it works ↓</a>
+        </div>
+        <dl class="hero-facts">
+          <div><dt>Client</dt><dd>Rust + wgpu</dd></div>
+          <div><dt>Apps written in</dt><dd>Crystal</dd></div>
+          <div><dt>Address</dt><dd>A key, not a URL</dd></div>
+          <div><dt>Apps run</dt><dd>On creators' servers</dd></div>
+        </dl>
+      </div>
+
+      <div>
+        <!-- Interactive concept of the client -->
+        <div class="client" aria-label="Concept preview of the Mugen client">
+          <div class="client-bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="mono">mugen — joined apps</span>
+            <span class="live">● RENDERING LOCALLY</span>
+          </div>
+          <div class="client-body">
+            <div class="rail">
+              <div class="rail-label">Joined</div>
+              <div class="rail-list" role="group" aria-label="Switch demo app">
+                <button class="rail-btn" type="button" data-app="tasks" aria-pressed="true"><span class="glyph" style="background:#E8480C">✓</span><span>Tasks<small>by Mara</small></span></button>
+                <button class="rail-btn" type="button" data-app="journal" aria-pressed="false"><span class="glyph" style="background:#0E7569">J</span><span>Journal<small>by Theo</small></span></button>
+                <button class="rail-btn" type="button" data-app="pantry" aria-pressed="false"><span class="glyph" style="background:#8A5A00">P</span><span>Pantry<small>by June</small></span></button>
+              </div>
+              <div class="rail-discover"><strong>+ Discover apps</strong>Browse the published directory. Joining takes one tap — no address to type.</div>
+            </div>
+            <div class="pane" id="pane"><!-- rendered by script --></div>
+          </div>
+          <div class="log" id="log" aria-live="polite"></div>
+        </div>
+        <p class="client-caption"><strong>Try it:</strong> switch apps in the sidebar, tick a task, add your own. Every tap below is an <span class="mono">Event</span> to the server — every reply is a <span class="mono">Patch</span> to the UI tree. The client never runs app code.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip" aria-hidden="true">
+    <div class="strip-in">
+      <span>HTML</span><span>CSS</span><span>JavaScript</span><span>Address bar</span><span>Cookies</span>
+      <span class="yes">Rust renderer</span><span class="yes">Crystal apps</span><span class="yes">Verified identity</span>
+    </div>
+  </div>
+
+  <!-- WHY -->
+  <section class="block" id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">01 — THE PROBLEM</span>
+        <h2>The URL was never a good address.</h2>
+        <p>On the web, an address says <em>where</em> to go — then you trust DNS, a domain owner, and a chain of certificate authorities that you actually arrived at the right place. Mugen flips it: identity first, location second.</p>
+      </div>
+      <div class="compare">
+        <div class="compare-card">
+          <h3>The web today</h3>
+          <p class="sub">Location is identity — and location can be taken.</p>
+          <ul>
+            <li><span class="mark no">✕</span><p><strong>You type the address.</strong> One wrong letter is a typosquat, a lookalike, a phishing page.</p></li>
+            <li><span class="mark no">✕</span><p><strong>Domains expire and change hands.</strong> The app you trusted yesterday can be someone else's server tomorrow.</p></li>
+            <li><span class="mark no">✕</span><p><strong>Every page runs foreign code.</strong> Scripts, trackers, and third parties execute inside your browser.</p></li>
+            <li><span class="mark no">✕</span><p><strong>Moving hosts breaks everything.</strong> New domain, new login, lost data, dead links.</p></li>
+          </ul>
+        </div>
+        <div class="compare-card win">
+          <h3>With Mugen</h3>
+          <p class="sub">Identity is a key. The server address is just a hint.</p>
+          <ul>
+            <li><span class="mark ok">✓</span><p><strong>You join apps, you don't visit addresses.</strong> Discover, preview the publisher and permissions, join in one tap.</p></li>
+            <li><span class="mark ok">✓</span><p><strong>The key can't be hijacked.</strong> A taken-over domain still can't sign as the app — the client refuses to render it.</p></li>
+            <li><span class="mark ok">✓</span><p><strong>Apps never run code on your machine.</strong> They send a validated UI tree. Mugen lays it out and paints it.</p></li>
+            <li><span class="mark ok">✓</span><p><strong>Creators can move freely.</strong> New server, same signed identity, same storage and login for you.</p></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section class="block" id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">02 — HOW IT WORKS</span>
+        <h2>Creators host. Mugen renders.</h2>
+        <p>The split is the whole design. Crystal apps stay on their creators' servers, owning logic and data. The Rust client owns the window, the layout, and every pixel — and nothing else needs to be trusted.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step"><div class="num">一</div><h3>Build in Crystal</h3><p>Write components with the Mugen SDK. They describe UI as a tree — not pages, not markup.</p><span class="mono">sdk/crystal</span></div>
+        <div class="step"><div class="num">二</div><h3>Publish a manifest</h3><p>Sign your app's name, icon, version, permissions, and server endpoints with your publisher key.</p><span class="mono">manifest · signed</span></div>
+        <div class="step"><div class="num">三</div><h3>People join</h3><p>Your app appears in the directory. Joining pins your key and approves your permissions — before anything renders.</p><span class="mono">directory → joined list</span></div>
+        <div class="step"><div class="num">四</div><h3>Mugen verifies &amp; renders</h3><p>The client checks the server proves your key, receives a UI snapshot, and paints it with its own engine.</p><span class="mono">snapshot → pixels</span></div>
+        <div class="step"><div class="num">五</div><h3>Events up, patches down</h3><p>Taps and typing travel back as events. The server replies with small tree patches — never a full reload.</p><span class="mono">event ⇄ patch</span></div>
+      </div>
+
+      <div class="arch" aria-label="Architecture diagram">
+        <div class="arch-flow">
+          <div class="arch-box">
+            <h4>Crystal app — creator's server</h4>
+            <p>Logic, data, routing, and who can do what.</p>
+            <ul><li>Components → UI tree</li><li>Diffs tree → patch</li><li>Handles events</li></ul>
+          </div>
+          <div class="arch-arrow" aria-hidden="true">⇄</div>
+          <div class="arch-box">
+            <h4>The protocol</h4>
+            <p>Binary, versioned, validated hard in Rust.</p>
+            <ul><li>Snapshot on connect</li><li>Patch per change</li><li>Event per interaction</li></ul>
+          </div>
+          <div class="arch-arrow" aria-hidden="true">→</div>
+          <div class="arch-box">
+            <h4>Rust client — your machine</h4>
+            <p>Shell, layout, and rendering. No app code ever runs here.</p>
+            <ul><li>winit window + input</li><li>Constraint layout, dirty tracking</li><li>wgpu display list + text atlas</li></ul>
+          </div>
+        </div>
+
+        <div class="proto-tabs" role="group" aria-label="Protocol messages">
+          <button class="proto-tab" type="button" data-proto="snapshot" aria-pressed="true">Snapshot</button>
+          <button class="proto-tab" type="button" data-proto="patch" aria-pressed="false">Patch</button>
+          <button class="proto-tab" type="button" data-proto="event" aria-pressed="false">Event</button>
+        </div>
+        <div class="proto-panel" id="protoPanel"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREATORS -->
+  <section class="block" id="creators">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">03 — FOR CREATORS</span>
+        <h2>Write Crystal. Ship an app, not a website.</h2>
+        <p>No frontend bundle, no browser quirks, no CSS. You write components on your server; every joined client renders them natively and stays in sync through patches.</p>
+      </div>
+      <div class="split">
+        <div>
+          <pre class="code"><span class="c"># apps/tasks/src/tasks.cr</span>
+<span class="k">component</span> TaskList <span class="k">do</span>
+  column(gap: <span class="s">8</span>) <span class="k">do</span>
+    text <span class="s">"Today"</span>, size: <span class="s">18</span>, weight: <span class="s">:bold</span>
+
+    list(tasks) <span class="k">do</span> |task|
+      row <span class="k">do</span>
+        checkbox(task.done?,
+          on_toggle: -&gt;toggle(task))
+        text task.title
+      <span class="k">end</span>
+    <span class="k">end</span>
+
+    input(placeholder: <span class="s">"Add a task…"</span>,
+      on_submit: -&gt;add_task)
+  <span class="k">end</span>
+<span class="k">end</span></pre>
+          <p style="color:var(--muted);font-size:13.5px;margin:12px 2px 0">The SDK compiles this to typed nodes, diffs against the last tree, and sends only what changed. Style is typed too — enums and tokens, never strings of CSS.</p>
+        </div>
+        <div class="creator-points">
+          <div><span class="n">A — YOUR SERVER, YOUR RULES</span><h3>You host it, you own the data</h3><p>Apps run where you put them — a VPS, a home server, anywhere. Change hosts anytime; your signed manifest points clients to the new endpoint and your identity doesn't change.</p></div>
+          <div><span class="n">B — ONE REPO, NO DRIFT</span><h3>Client, protocol, and SDK grow together — planned layout</h3><pre class="code repo-tree" style="margin-top:10px">mugen/
+  crates/shell/      <span class="c"># window, joined list, lifecycle</span>
+  crates/renderer/   <span class="c"># wgpu display list, atlas</span>
+  crates/layout/     <span class="c"># constraints, dirty tracking</span>
+  crates/protocol/   <span class="c"># snapshot / patch / event</span>
+  sdk/crystal/       <span class="c"># components → tree → patch</span>
+  apps/demo-tasks/   <span class="c"># the first demo app</span></pre></div>
+          <div><span class="n">C — A SMALL, HONEST SURFACE</span><h3>Ten node types are enough</h3><p>Box, Text, Image, Scroll, Stack, Input, Button, List, Canvas, Video. Everything else is composed from those — so apps look and behave consistently, stay accessible, and can't draw outside the lines.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- IDENTITY -->
+  <section class="block" id="identity">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">04 — IDENTITY, NOT URL</span>
+        <h2>You verify before you render.</h2>
+        <p>On the web you click a link and you're already on someone's page. In Mugen, joining starts with a preview: who made this, what it wants, and the fingerprint of the key that proves it.</p>
+      </div>
+      <div class="id-grid">
+        <div class="id-card" aria-label="Example app identity card">
+          <div class="id-card-top">
+            <div class="id-avatar">✓</div>
+            <div><h3>Tasks</h3><div class="by">by Mara · verified publisher · v0.4</div></div>
+          </div>
+          <div class="finger"><b>PUBLISHER KEY FINGERPRINT</b>7f3a · 9c21 · e04b · 88d2 · 41af · c6e0 · 2b97 · 5d13</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:8px">This app is asking for:</div>
+          <div class="perms"><span class="chip">Its own storage</span><span class="chip">Notifications</span><span class="chip">Nothing else</span></div>
+          <div class="id-actions">
+            <button class="btn" type="button" id="joinBtn">Join Tasks</button>
+            <button class="btn ghost" type="button" id="notNowBtn">Not now</button>
+          </div>
+          <p id="joinMsg" style="margin:14px 0 0;font-size:13.5px;color:var(--muted)" aria-live="polite">The address behind this card can change. This key can't be faked.</p>
+        </div>
+        <ul class="sec-list">
+          <li><span class="mark ok">✓</span><div><h3>Lookalikes get caught</h3><p>A new app with a familiar name but a different key is flagged as a lookalike — and its key-derived mark won't match the one you know.</p></div></li>
+          <li><span class="mark ok">✓</span><div><h3>Nothing leaks between apps</h3><p>No cookies, no third-party scripts, no referrer. Storage and sign-in are isolated per app ID, brokered by the shell.</p></div></li>
+          <li><span class="mark ok">✓</span><div><h3>Updates can't be smuggled in</h3><p>Updates are signed manifests with rising version numbers. Unsigned updates and downgrades are refused.</p></div></li>
+          <li><span class="mark ok">✓</span><div><h3>The directory can't impersonate</h3><p>The directory is for discovery — search, categories, plain-language permissions. Even a compromised directory can't fake an app without its private key. You can always join directly by invite.</p></div></li>
+          <li><span class="mark ok">✓</span><div><h3>Bad apps can't hurt the client</h3><p>Every tree is validated: max depth, max nodes, max text, no duplicate IDs. Unknown nodes are ignored — never a crash, never a frozen window.</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="block" id="roadmap">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">05 — THE ROAD TO V0</span>
+        <h2>Small steps, in the right order.</h2>
+        <p>The milestone that matters is one boring, working loop: a Crystal task app, rendered by Rust, responding to a click. Everything else is an improvement on a system that already runs.</p>
+      </div>
+      <div class="road">
+        <div class="road-row"><div class="rn">一</div><div><h3>Protocol before pixels</h3><p>Typed nodes, Snapshot / Patch / Event, and hard validation — with round-trip tests.</p></div><span class="road-tag first">START HERE</span></div>
+        <div class="road-row"><div class="rn">二</div><div><h3>The smallest renderer</h3><p>winit + wgpu, Row / Column + Box / Text, crisp text via cosmic-text. Clicks hit the right node.</p></div><span class="road-tag">THEN</span></div>
+        <div class="road-row"><div class="rn">三</div><div><h3>The smallest Crystal SDK</h3><p>A tiny DSL for Column / Text / Button / Input that emits and diffs a tree over WebSocket.</p></div><span class="road-tag">THEN</span></div>
+        <div class="road-row"><div class="rn">四</div><div><h3>End-to-end v0</h3><p>Connect, snapshot, render, click, patch, re-render only what's dirty. Tag it v0.</p></div><span class="road-tag">MILESTONE</span></div>
+        <div class="road-row"><div class="rn">五</div><div><h3>The shell, then identity</h3><p>Joined list, fast switching with suspend / resume, per-app storage — then keys, signed manifests, and the preview card.</p></div><span class="road-tag">AFTER V0</span></div>
+        <div class="road-row"><div class="rn">六</div><div><h3>The published directory</h3><p>Signed index, search, categories, and key rotation — old key signs the new key, with a delay and a warning.</p></div><span class="road-tag">AFTER V0</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- START -->
+  <section class="block" id="start">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">06 — START BUILDING</span>
+        <h2>Clone it on macOS. Open it in VS Code.</h2>
+        <p>Mugen is developed on macOS — where wgpu targets Metal — with VS Code as the editor. The repo is public; the layout in the For Creators section is the planned structure, and the build starts with the protocol crate and an empty shell window.</p>
+      </div>
+      <div class="start-grid">
+        <div>
+          <div class="term"><span class="dim"># clone the repo</span><br /><span class="p">$</span> git clone git@github.com:davidsth/mugen.git<br /><span class="p">$</span> cd mugen<br /><br /><span class="dim"># check your toolchains</span><br /><span class="p">$</span> rustc --version &amp;&amp; cargo --version<br /><span class="p">$</span> crystal --version<br /><br /><span class="dim"># goal for the first milestone, once the</span><br /><span class="dim"># shell crate lands: an empty window that</span><br /><span class="dim"># opens and closes cleanly</span><br /><span class="p">$</span> cargo run -p shell</div>
+          <div class="copy-row">
+            <button class="copy-btn" type="button" id="copyBtn">Copy clone command</button>
+            <span class="copy-done" id="copyDone" hidden>Copied ✓</span>
+            <a href="https://github.com/davidsth/mugen" target="_blank" rel="noopener" style="font-weight:700;font-size:13.5px">github.com/davidsth/mugen ↗</a>
+          </div>
+        </div>
+        <ul class="req-list">
+          <li><strong>Rust (stable)</strong>For the shell, renderer, layout, and protocol crates.<span class="mono" style="display:block;margin-top:4px">install via rustup · pin with rust-toolchain.toml</span></li>
+          <li><strong>Crystal</strong>For the SDK and demo apps — fast native code, fibers for many live users.<span class="mono" style="display:block;margin-top:4px">brew install crystal</span></li>
+          <li><strong>VS Code + rust-analyzer</strong>Plus the Crystal language extension for the SDK side of the repo.<span class="mono" style="display:block;margin-top:4px">one workspace · both languages</span></li>
+          <li><strong>An Apple Silicon or Intel Mac</strong>wgpu renders through Metal on macOS; Vulkan and DX12 keep Linux and Windows open later.<span class="mono" style="display:block;margin-top:4px">macOS first · cross-platform by design</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <div class="final">
+    <div class="wrap">
+      <div class="jp jp-big" aria-hidden="true">無限</div>
+      <h2>Mugen means infinite.<br />Help build the limitless client.</h2>
+      <p>The web gave every app an address you have to trust. Mugen gives every app an identity you can verify — and gives you back a simple list of the apps you've chosen. It's early, it's open source, and the first window hasn't rendered yet. That's the fun part.</p>
+      <div class="hero-ctas">
+        <a class="btn" href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">Star &amp; follow on GitHub ↗</a>
+        <a class="btn ghost" href="#roadmap">See the road to v0</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span><strong style="color:var(--ink)">MUGEN</strong> <span class="jp">無限</span> — infinite / limitless</span>
+    <a href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">GitHub</a>
+    <a href="#how">How it works</a>
+    <a href="#identity">Identity</a>
+    <span class="right">Rust client · Crystal apps · Early development</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- protocol log ---------- */
+  var logEl = document.getElementById('log');
+  var logLines = [];
+  function log(html){
+    logLines.unshift(html);
+    if (logLines.length > 4) logLines.length = 4;
+    logEl.innerHTML = logLines.join('<br />');
+  }
+  function logSnapshot(app, v){
+    log('<span class="k2">← SNAPSHOT</span> ' + app + ' <span class="dim">v' + v + ' · tree received · key verified ✓</span>');
+  }
+
+  /* ---------- demo apps ---------- */
+  var pane = document.getElementById('pane');
+  var state = {
+    app: 'tasks',
+    version: 12,
+    tasks: [
+      { title: 'Sketch the protocol types', tag: 'protocol', done: true },
+      { title: 'Open an empty wgpu window', tag: 'renderer', done: false },
+      { title: 'Write the first Crystal component', tag: 'sdk', done: false }
+    ],
+    notes: 0
+  };
+
+  var appsMeta = {
+    tasks:   { name: 'Tasks',   by: 'by Mara · publisher key verified' },
+    journal: { name: 'Journal', by: 'by Theo · publisher key verified' },
+    pantry:  { name: 'Pantry',  by: 'by June · publisher key verified' }
+  };
+
+  function esc(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderPane(){
+    var meta = appsMeta[state.app];
+    var head = '<div class="pane-head"><div><h3>' + meta.name + '</h3><p>' + meta.by + '</p></div><span class="verified">✓ KEY VERIFIED</span></div>';
+    if (state.app === 'tasks'){
+      var items = state.tasks.map(function(t, i){
+        return '<li class="task' + (t.done ? ' done' : '') + '"><button class="task-check" type="button" data-task="' + i + '" aria-label="Toggle task: ' + esc(t.title) + '">' + (t.done ? '✓' : '') + '</button><span>' + esc(t.title) + '</span><span class="tag">' + esc(t.tag) + '</span></li>';
+      }).join('');
+      pane.innerHTML = head +
+        '<ul class="task-list">' + items + '</ul>' +
+        '<form class="add-row" id="addForm"><input id="addInput" type="text" placeholder="Add a task…" aria-label="New task title" maxlength="60" /><button type="submit">Add</button></form>';
+      var form = document.getElementById('addForm');
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var input = document.getElementById('addInput');
+        var val = input.value.trim();
+        if (!val) return;
+        state.tasks.push({ title: val, tag: 'event', done: false });
+        state.version++;
+        log('<span class="k">→ EVENT</span> input.submit <span class="dim">· idempotent · node #input-1</span>');
+        log('<span class="k2">← PATCH</span> Tasks <span class="dim">v' + state.version + ' · +1 node · dirty: list only</span>');
+        renderPane();
+      });
+      pane.querySelectorAll('[data-task]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var i = parseInt(btn.getAttribute('data-task'), 10);
+          state.tasks[i].done = !state.tasks[i].done;
+          state.version++;
+          log('<span class="k">→ EVENT</span> checkbox.toggle <span class="dim">· task ' + (i + 1) + '</span>');
+          log('<span class="k2">← PATCH</span> Tasks <span class="dim">v' + state.version + ' · 1 node updated · no relayout of the rest</span>');
+          renderPane();
+        });
+      });
+    } else if (state.app === 'journal'){
+      pane.innerHTML = head +
+        '<div class="note-card"><h4>Why no address bar?</h4><p>Because an address is a place, and places get taken. An identity is a key, and keys don\'t move. Today I joined three apps and typed zero URLs.</p></div>' +
+        '<div class="note-card"><h4>Switching is instant</h4><p>Background apps keep their last tree and a bitmap snapshot. No reload, no spinner — resume and apply the patches you missed.</p></div>';
+    } else {
+      pane.innerHTML = head +
+        '<div class="note-card"><h4>This week</h4><p>Rice · Miso · Nori · Eggs · Spinach — a list owned by this app\'s server, rendered by Mugen, stored under this app\'s ID only. No other app can read it.</p></div>' +
+        '<div class="note-card"><h4>Permissions</h4><p>Pantry asked for its own storage and nothing else. That\'s all it will ever get unless you approve more.</p></div>';
+    }
+  }
+
+  var railBtns = document.querySelectorAll('[data-app]');
+  railBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var app = btn.getAttribute('data-app');
+      if (app === state.app) return;
+      railBtns.forEach(function(b){ b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+      state.app = app;
+      state.version++;
+      log('<span class="dim">— shell —</span> suspending previous app <span class="dim">· snapshot kept · no layout, no paint</span>');
+      logSnapshot(appsMeta[app].name, state.version);
+      renderPane();
+    });
+  });
+
+  renderPane();
+  logSnapshot('Tasks', state.version);
+  log('<span class="dim">— shell —</span> publisher key pinned at join <span class="dim">· endpoint treated as a hint only</span>');
+
+  /* ---------- protocol tabs ---------- */
+  var protoData = {
+    snapshot: { title: '<strong>Snapshot</strong> — sent once, on connect or reconnect. The full UI tree plus a version number, so the client can paint immediately.',
+      code: 'Snapshot { version: 42, root: Column[ … ] }' },
+    patch: { title: '<strong>Patch</strong> — the only thing sent after that. Upserts, deletes, and moves against a base version, coalesced to one patch per frame tick. Scrolling and typing never resend the tree.',
+      code: 'Patch { base: 42, upserts: [ #12.done = true ] }' },
+    event: { title: '<strong>Event</strong> — client to server, and idempotent. A tap retried after a reconnect can never submit twice. Input feels instant because the client shows it optimistically and reconciles on the patch.',
+      code: 'Event { id: 9f2…, node: #12, kind: toggle }' }
+  };
+  var protoPanel = document.getElementById('protoPanel');
+  function showProto(key){
+    protoPanel.innerHTML = protoData[key].title + '<span class="mono">' + protoData[key].code + '</span>';
+    document.querySelectorAll('[data-proto]').forEach(function(b){
+      b.setAttribute('aria-pressed', b.getAttribute('data-proto') === key ? 'true' : 'false');
+    });
+  }
+  document.querySelectorAll('[data-proto]').forEach(function(b){
+    b.addEventListener('click', function(){ showProto(b.getAttribute('data-proto')); });
+  });
+  showProto('snapshot');
+
+  /* ---------- identity card ---------- */
+  var joinBtn = document.getElementById('joinBtn');
+  var notNowBtn = document.getElementById('notNowBtn');
+  var joinMsg = document.getElementById('joinMsg');
+  var joined = false;
+  joinBtn.addEventListener('click', function(){
+    joined = !joined;
+    joinBtn.textContent = joined ? 'Joined ✓ — in your list' : 'Join Tasks';
+    joinMsg.textContent = joined
+      ? 'Pinned. Tasks is now in your joined list, with storage isolated under its app ID. Its server can move tomorrow — this key is what you trust.'
+      : 'The address behind this card can change. This key can\'t be faked.';
+  });
+  notNowBtn.addEventListener('click', function(){
+    joinMsg.textContent = 'Nothing rendered, nothing connected. In Mugen, declining happens before an app ever reaches your screen — not after.';
+  });
+
+  /* ---------- copy clone command ---------- */
+  var copyBtn = document.getElementById('copyBtn');
+  var copyDone = document.getElementById('copyDone');
+  copyBtn.addEventListener('click', function(){
+    var cmd = 'git clone git@github.com:davidsth/mugen.git';
+    function done(){ copyDone.hidden = false; setTimeout(function(){ copyDone.hidden = true; }, 2200); }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(cmd).then(done, done);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = cmd; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); done();
+    }
+  });
+})();
+</script>
+</body>
+</html>
