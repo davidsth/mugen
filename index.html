@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
-<meta name="description" content="Mugen is a Rust desktop client that renders Crystal apps without HTML, CSS, or JavaScript. No URLs. Identity by key. Infinite apps to join." />
+<meta name="description" content="Mugen is a Rust desktop client that renders Crystal apps without HTML, CSS, or JavaScript. No URLs, no ads or popups, one profile for every app, no JavaScript bloat, and accessibility built in from the first pixel." />
 <link rel="icon" href="data:," />
 <title>Mugen — Infinite apps. No URLs.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -144,6 +144,63 @@
   .log .k{color:#FF8A5C}.log .k2{color:#3EC9B6}.log .dim{color:var(--code-muted)}
   .client-caption{font-size:13px;color:var(--muted);margin:12px 2px 0}
   .client-caption strong{color:var(--ink)}
+  .pillars{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+  .pillar{font-size:12.5px;font-weight:800;border:1px solid var(--line-strong);border-radius:999px;padding:7px 12px;background:var(--panel)}
+  .pillar em{font-style:normal;color:var(--accent)}
+  /* profile + complex app panes */
+  .profile-bar{display:flex;align-items:center;gap:9px;padding:10px 8px 12px;border-bottom:1px solid var(--line);margin-bottom:12px}
+  .profile-av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:900;font-size:13px;flex:none}
+  .profile-bar strong{display:block;font-size:13px;line-height:1.2}
+  .profile-bar small{display:block;font-size:11px;color:var(--teal);font-weight:700}
+  .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+  @media(max-width:420px){.shop-grid{grid-template-columns:1fr}}
+  .prod{border:1px solid var(--line);border-radius:10px;padding:11px;background:var(--bg-2)}
+  .prod .swatch{height:52px;border-radius:7px;margin-bottom:9px}
+  .prod h4{margin:0;font-size:13.5px;line-height:1.3}
+  .prod p{margin:2px 0 8px;font-size:12px;color:var(--muted)}
+  .prod-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .prod-row b{font-size:13.5px}
+  .mini-btn{font:inherit;font-size:12px;font-weight:800;border:none;border-radius:999px;background:var(--ink);color:var(--bg);padding:6px 11px;cursor:pointer}
+  .mini-btn:hover,.mini-btn:focus-visible{background:var(--accent);color:#fff;outline:none}
+  .cart-bar{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 13px;font-size:13px;font-weight:700}
+  .cart-bar span{opacity:.75;font-weight:500}
+  .trav-hero{margin-top:14px;border-radius:10px;padding:14px;color:#fff;background:linear-gradient(120deg,#0E7569,#123f39)}
+  .trav-hero h4{margin:0 0 3px;font-size:16px}
+  .trav-hero p{margin:0;font-size:12.5px;opacity:.88}
+  .itin{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+  .itin li{display:flex;gap:11px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg-2);font-size:13px}
+  .itin .time{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--accent);font-weight:700;white-space:nowrap;padding-top:1px}
+  .itin b{display:block;font-size:13.5px}
+  .itin span{color:var(--muted);font-size:12px}
+  .seg{display:flex;gap:6px;margin-top:12px}
+  .seg button{font:inherit;font-size:12px;font-weight:800;border:1px solid var(--line-strong);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .post{border:1px solid var(--line);border-radius:10px;padding:13px;background:var(--bg-2);margin-top:12px}
+  .post-top{display:flex;gap:9px;align-items:center}
+  .post-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:900;flex:none}
+  .post-top b{font-size:13.5px;display:block;line-height:1.2}
+  .post-top small{color:var(--muted);font-size:11.5px}
+  .post p{margin:9px 0;font-size:13.5px;color:var(--ink-2)}
+  .post-media{height:64px;border-radius:8px;background:linear-gradient(120deg,#E8480C,#D99A06);display:flex;align-items:flex-end;padding:8px 10px;color:#fff;font-size:11.5px;font-weight:800}
+  .post-actions{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .post-actions .count{font-size:12px;color:var(--muted);margin-left:auto}
+  /* principles */
+  .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:960px){.principles{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.principles{grid-template-columns:1fr}}
+  .principle{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:22px}
+  .principle.hero-p{grid-column:span 2;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  @media(max-width:600px){.principle.hero-p{grid-column:span 1}}
+  .principle .big-no{font-family:"Noto Serif JP",serif;font-weight:900;font-size:30px;color:var(--accent);line-height:1}
+  .principle h3{margin:10px 0 6px;font-size:18px}
+  .principle p{margin:0;font-size:14.5px;color:var(--ink-2)}
+  .principle.hero-p p{color:var(--bg);opacity:.85}
+  .principle .proof{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .principle.hero-p .proof{border-top-color:rgba(255,255,255,.25);color:inherit;opacity:.75}
+  .profile-demo{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .profile-demo .profile-av{width:38px;height:38px;font-size:15px}
+  .profile-demo div b{display:block;font-size:14px}
+  .profile-demo div span{font-size:12px;color:var(--muted)}
 
   /* ---------- strip ---------- */
   .strip{border-bottom:1px solid var(--line);background:var(--ink);color:var(--bg)}
@@ -276,6 +333,7 @@
     <a class="brand" href="#top">MUGEN <span class="jp">無限</span> <small>INFINITE / LIMITLESS</small></a>
     <nav class="topnav" aria-label="Mugen">
       <a href="#why">Why</a>
+      <a href="#principles">Principles</a>
       <a href="#how">How it works</a>
       <a href="#creators">For creators</a>
       <a href="#start">Start building</a>
@@ -295,6 +353,13 @@
         <h1>Infinite apps.<br /><span class="accent">No URLs.</span><br />No web pages.</h1>
         <p class="hero-sub">Mugen is a desktop client that <strong>replaces the browser</strong> — a custom rendering engine written in Rust, with no HTML, no CSS, and no JavaScript.</p>
         <p class="hero-note">Creators host their own servers and build apps in Crystal. You discover apps, join the ones you trust, and Mugen renders them natively. An app's identity is its publisher's key — never a domain you have to spell, guess, or hope hasn't been hijacked.</p>
+        <div class="pillars" aria-label="Core promises">
+          <span class="pillar"><em>✕</em> Ads &amp; popups</span>
+          <span class="pillar"><em>1</em> profile for every app</span>
+          <span class="pillar"><em>0</em> JavaScript shipped</span>
+          <span class="pillar"><em>✓</em> Accessibility first</span>
+          <span class="pillar"><em>∞</em> Apps as rich as any webpage</span>
+        </div>
         <div class="hero-ctas">
           <a class="btn" href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">View the repo on GitHub ↗</a>
           <a class="btn ghost" href="#how">See how it works ↓</a>
@@ -303,6 +368,8 @@
           <div><dt>Client</dt><dd>Rust + wgpu</dd></div>
           <div><dt>Apps written in</dt><dd>Crystal</dd></div>
           <div><dt>Address</dt><dd>A key, not a URL</dd></div>
+          <div><dt>Sign-in</dt><dd>One profile, every app</dd></div>
+          <div><dt>Ads &amp; popups</dt><dd>None — by design</dd></div>
           <div><dt>Apps run</dt><dd>On creators' servers</dd></div>
         </dl>
       </div>
@@ -313,31 +380,32 @@
           <div class="client-bar">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
             <span class="mono">mugen — joined apps</span>
-            <span class="live">● RENDERING LOCALLY</span>
+            <span class="live">● 1 PROFILE · NO ADS</span>
           </div>
           <div class="client-body">
             <div class="rail">
+              <div class="profile-bar"><span class="profile-av" aria-hidden="true">D</span><span><strong>David</strong><small>✓ One profile · all apps</small></span></div>
               <div class="rail-label">Joined</div>
               <div class="rail-list" role="group" aria-label="Switch demo app">
-                <button class="rail-btn" type="button" data-app="tasks" aria-pressed="true"><span class="glyph" style="background:#E8480C">✓</span><span>Tasks<small>by Mara</small></span></button>
-                <button class="rail-btn" type="button" data-app="journal" aria-pressed="false"><span class="glyph" style="background:#0E7569">J</span><span>Journal<small>by Theo</small></span></button>
-                <button class="rail-btn" type="button" data-app="pantry" aria-pressed="false"><span class="glyph" style="background:#8A5A00">P</span><span>Pantry<small>by June</small></span></button>
+                <button class="rail-btn" type="button" data-app="shop" aria-pressed="true"><span class="glyph" style="background:#E8480C">◈</span><span>Northwind<small>Shop · by Mara</small></span></button>
+                <button class="rail-btn" type="button" data-app="travel" aria-pressed="false"><span class="glyph" style="background:#0E7569">✈</span><span>Atlas<small>Travel · by Theo</small></span></button>
+                <button class="rail-btn" type="button" data-app="feed" aria-pressed="false"><span class="glyph" style="background:#8A5A00">◎</span><span>Pulse<small>Feed · by June</small></span></button>
               </div>
-              <div class="rail-discover"><strong>+ Discover apps</strong>Browse the published directory. Joining takes one tap — no address to type.</div>
+              <div class="rail-discover"><strong>+ Discover apps</strong>Stores, trip planners, media feeds — as rich as any webpage. Joining takes one tap, and your one profile comes with you.</div>
             </div>
             <div class="pane" id="pane"><!-- rendered by script --></div>
           </div>
           <div class="log" id="log" aria-live="polite"></div>
         </div>
-        <p class="client-caption"><strong>Try it:</strong> switch apps in the sidebar, tick a task, add your own. Every tap below is an <span class="mono">Event</span> to the server — every reply is a <span class="mono">Patch</span> to the UI tree. The client never runs app code.</p>
+        <p class="client-caption"><strong>Try it:</strong> switch apps, add something to the cart, save a trip stop, like a post. These aren't toy pages — a storefront, a travel planner, and a media feed are exactly the complex webpages Mugen is built to replace. Every tap is an <span class="mono">Event</span>; every reply is a <span class="mono">Patch</span>. No page loads, no JavaScript, no popups in between.</p>
       </div>
     </div>
   </div>
 
   <div class="strip" aria-hidden="true">
     <div class="strip-in">
-      <span>HTML</span><span>CSS</span><span>JavaScript</span><span>Address bar</span><span>Cookies</span>
-      <span class="yes">Rust renderer</span><span class="yes">Crystal apps</span><span class="yes">Verified identity</span>
+      <span>HTML</span><span>CSS</span><span>JavaScript</span><span>Address bar</span><span>Cookies</span><span>Ads</span><span>Popups</span><span>Per-site passwords</span>
+      <span class="yes">Rust renderer</span><span class="yes">Crystal apps</span><span class="yes">Verified identity</span><span class="yes">One profile</span><span class="yes">Accessible by default</span>
     </div>
   </div>
 
@@ -357,6 +425,9 @@
             <li><span class="mark no">✕</span><p><strong>You type the address.</strong> One wrong letter is a typosquat, a lookalike, a phishing page.</p></li>
             <li><span class="mark no">✕</span><p><strong>Domains expire and change hands.</strong> The app you trusted yesterday can be someone else's server tomorrow.</p></li>
             <li><span class="mark no">✕</span><p><strong>Every page runs foreign code.</strong> Scripts, trackers, and third parties execute inside your browser.</p></li>
+            <li><span class="mark no">✕</span><p><strong>Ads and popups fight for your attention.</strong> Banners, modals, cookie walls, autoplay — the page serves advertisers first.</p></li>
+            <li><span class="mark no">✕</span><p><strong>A new account for every site.</strong> Another password, another profile to fill in, another inbox of “verify your email.”</p></li>
+            <li><span class="mark no">✕</span><p><strong>Accessibility is bolted on — if at all.</strong> Screen readers guess at divs; keyboard users get trapped in custom widgets.</p></li>
             <li><span class="mark no">✕</span><p><strong>Moving hosts breaks everything.</strong> New domain, new login, lost data, dead links.</p></li>
           </ul>
         </div>
@@ -366,10 +437,56 @@
           <ul>
             <li><span class="mark ok">✓</span><p><strong>You join apps, you don't visit addresses.</strong> Discover, preview the publisher and permissions, join in one tap.</p></li>
             <li><span class="mark ok">✓</span><p><strong>The key can't be hijacked.</strong> A taken-over domain still can't sign as the app — the client refuses to render it.</p></li>
-            <li><span class="mark ok">✓</span><p><strong>Apps never run code on your machine.</strong> They send a validated UI tree. Mugen lays it out and paints it.</p></li>
+            <li><span class="mark ok">✓</span><p><strong>Apps never run code on your machine.</strong> They send a validated UI tree. Mugen lays it out and paints it — so there's nothing to inject an ad or a popup with.</p></li>
+            <li><span class="mark ok">✓</span><p><strong>One profile signs you in everywhere.</strong> Join once, and every app knows your name, avatar, and preferences — shared only with your permission.</p></li>
+            <li><span class="mark ok">✓</span><p><strong>Accessibility is in the tree itself.</strong> Every node carries a real role and label, so screen readers and keyboards work in every app, automatically.</p></li>
             <li><span class="mark ok">✓</span><p><strong>Creators can move freely.</strong> New server, same signed identity, same storage and login for you.</p></li>
           </ul>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINCIPLES -->
+  <section class="block" id="principles">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">02 — CORE PRINCIPLES</span>
+        <h2>Built in, not bolted on.</h2>
+        <p>These aren't settings you hunt for or extensions you install. They're consequences of how Mugen is built — apps send a validated UI tree, and the Rust client decides what can ever appear on your screen.</p>
+      </div>
+      <div class="principles">
+        <article class="principle hero-p">
+          <div class="big-no">✕ ads</div>
+          <h3>Ad &amp; popup free — structurally</h3>
+          <p>There is no ad slot, no modal-on-a-timer, no cookie wall, and no third-party script that could spawn one. An app can only place the nodes it declares, inside its own window, and the shell owns every dialog. Nothing can interrupt you from outside the app you're using.</p>
+          <div class="proof">NO AD NODES · NO POPUP API · NO THIRD-PARTY SCRIPTS · SHELL OWNS ALL DIALOGS</div>
+        </article>
+        <article class="principle">
+          <div class="big-no">1</div>
+          <h3>One account. One profile. Every app.</h3>
+          <p>No new password per app, no profile form for the hundredth time. You create one Mugen profile; joining an app shares only what you approve — name, avatar, contact — and sign-in is the same key-backed identity everywhere.</p>
+          <div class="profile-demo"><span class="profile-av" aria-hidden="true">D</span><div><b>David — your Mugen profile</b><span>Signed in once · recognised by Northwind, Atlas, Pulse…</span></div></div>
+          <div class="proof">ONE SIGN-IN · PER-APP PERMISSION TO SHARE · LEAVE AN APP = REVOKE ITS ACCESS</div>
+        </article>
+        <article class="principle">
+          <div class="big-no">0 KB</div>
+          <h3>No JavaScript bloat</h3>
+          <p>Webpages ship megabytes of JS before they show anything — frameworks, trackers, hydration. Mugen apps ship <em>no</em> JavaScript at all: the server sends a small binary patch of what changed, and the native client — installed once — does the rendering. Updates are kilobytes, not bundles.</p>
+          <div class="proof">0 JS DOWNLOADED PER APP · BINARY PATCHES, NOT BUNDLES · NO TRACKERS TO LOAD</div>
+        </article>
+        <article class="principle">
+          <div class="big-no">a11y</div>
+          <h3>Accessibility first</h3>
+          <p>Because apps are semantic trees — Button, Input, List, Text — not pixels or divs, Mugen builds a real accessibility tree (via AccessKit) for every app for free. Screen-reader labels, full keyboard navigation, focus you can see, high-contrast theming, and reduced-motion support come from the client, so no app can forget them.</p>
+          <div class="proof">SEMANTIC NODES · SCREEN READER + KEYBOARD IN EVERY APP · CONTRAST &amp; MOTION FROM THE SHELL</div>
+        </article>
+        <article class="principle">
+          <div class="big-no">∞</div>
+          <h3>As rich as any webpage</h3>
+          <p>Simple protocol, complex apps. Virtualised lists scroll through thousands of products or posts, Canvas and Video cover dashboards, editors, and media, and grids + stacks compose storefronts, booking flows, and workspaces. If a webpage can do it, a Mugen app can compose it — try the store, trip planner, and feed in the preview above.</p>
+          <div class="proof">VIRTUALISED LISTS · CANVAS + VIDEO · GRIDS, FORMS, CHECKOUT &amp; MEDIA FLOWS</div>
+        </article>
       </div>
     </div>
   </section>
@@ -378,7 +495,7 @@
   <section class="block" id="how">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">02 — HOW IT WORKS</span>
+        <span class="mono">03 — HOW IT WORKS</span>
         <h2>Creators host. Mugen renders.</h2>
         <p>The split is the whole design. Crystal apps stay on their creators' servers, owning logic and data. The Rust client owns the window, the layout, and every pixel — and nothing else needs to be trusted.</p>
       </div>
@@ -426,7 +543,7 @@
   <section class="block" id="creators">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">03 — FOR CREATORS</span>
+        <span class="mono">04 — FOR CREATORS</span>
         <h2>Write Crystal. Ship an app, not a website.</h2>
         <p>No frontend bundle, no browser quirks, no CSS. You write components on your server; every joined client renders them natively and stays in sync through patches.</p>
       </div>
@@ -460,7 +577,7 @@
   crates/protocol/   <span class="c"># snapshot / patch / event</span>
   sdk/crystal/       <span class="c"># components → tree → patch</span>
   apps/demo-tasks/   <span class="c"># the first demo app</span></pre></div>
-          <div><span class="n">C — A SMALL, HONEST SURFACE</span><h3>Ten node types are enough</h3><p>Box, Text, Image, Scroll, Stack, Input, Button, List, Canvas, Video. Everything else is composed from those — so apps look and behave consistently, stay accessible, and can't draw outside the lines.</p></div>
+          <div><span class="n">C — A SMALL, HONEST SURFACE</span><h3>Ten node types are enough — for complex apps</h3><p>Box, Text, Image, Scroll, Stack, Input, Button, List, Canvas, Video. Composed, they build the complex things webpages do today: storefronts with carts and checkout, travel planners with maps and itineraries, media feeds, dashboards, and editors. A small surface is what keeps every one of them consistent, accessible, ad-free, and unable to draw outside the lines — or pop anything up over another app.</p></div>
         </div>
       </div>
     </div>
@@ -470,7 +587,7 @@
   <section class="block" id="identity">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">04 — IDENTITY, NOT URL</span>
+        <span class="mono">05 — IDENTITY, NOT URL</span>
         <h2>You verify before you render.</h2>
         <p>On the web you click a link and you're already on someone's page. In Mugen, joining starts with a preview: who made this, what it wants, and the fingerprint of the key that proves it.</p>
       </div>
@@ -478,13 +595,13 @@
         <div class="id-card" aria-label="Example app identity card">
           <div class="id-card-top">
             <div class="id-avatar">✓</div>
-            <div><h3>Tasks</h3><div class="by">by Mara · verified publisher · v0.4</div></div>
+            <div><h3>Northwind</h3><div class="by">by Mara · verified publisher · v0.4</div></div>
           </div>
           <div class="finger"><b>PUBLISHER KEY FINGERPRINT</b>7f3a · 9c21 · e04b · 88d2 · 41af · c6e0 · 2b97 · 5d13</div>
           <div style="font-size:13px;color:var(--muted);margin-bottom:8px">This app is asking for:</div>
-          <div class="perms"><span class="chip">Its own storage</span><span class="chip">Notifications</span><span class="chip">Nothing else</span></div>
+          <div class="perms"><span class="chip">Your name &amp; avatar only</span><span class="chip">Its own storage</span><span class="chip">Notifications</span><span class="chip">Nothing else</span></div>
           <div class="id-actions">
-            <button class="btn" type="button" id="joinBtn">Join Tasks</button>
+            <button class="btn" type="button" id="joinBtn">Join Northwind</button>
             <button class="btn ghost" type="button" id="notNowBtn">Not now</button>
           </div>
           <p id="joinMsg" style="margin:14px 0 0;font-size:13.5px;color:var(--muted)" aria-live="polite">The address behind this card can change. This key can't be faked.</p>
@@ -504,7 +621,7 @@
   <section class="block" id="roadmap">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">05 — THE ROAD TO V0</span>
+        <span class="mono">06 — THE ROAD TO V0</span>
         <h2>Small steps, in the right order.</h2>
         <p>The milestone that matters is one boring, working loop: a Crystal task app, rendered by Rust, responding to a click. Everything else is an improvement on a system that already runs.</p>
       </div>
@@ -523,7 +640,7 @@
   <section class="block" id="start">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">06 — START BUILDING</span>
+        <span class="mono">07 — START BUILDING</span>
         <h2>Clone it on macOS. Open it in VS Code.</h2>
         <p>Mugen is developed on macOS — where wgpu targets Metal — with VS Code as the editor. The repo is public; the layout in the For Creators section is the planned structure, and the build starts with the protocol crate and an empty shell window.</p>
       </div>
@@ -551,7 +668,7 @@
     <div class="wrap">
       <div class="jp jp-big" aria-hidden="true">無限</div>
       <h2>Mugen means infinite.<br />Help build the limitless client.</h2>
-      <p>The web gave every app an address you have to trust. Mugen gives every app an identity you can verify — and gives you back a simple list of the apps you've chosen. It's early, it's open source, and the first window hasn't rendered yet. That's the fun part.</p>
+      <p>The web gave every app an address you have to trust, an account to create, ads to dismiss, and megabytes of JavaScript to download. Mugen gives every app an identity you can verify, signs you in with the one profile you already have, and renders rich, accessible apps with none of that in the way. It's early, it's open source, and the first window hasn't rendered yet. That's the fun part.</p>
       <div class="hero-ctas">
         <a class="btn" href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">Star &amp; follow on GitHub ↗</a>
         <a class="btn ghost" href="#roadmap">See the road to v0</a>
@@ -590,20 +707,25 @@
   /* ---------- demo apps ---------- */
   var pane = document.getElementById('pane');
   var state = {
-    app: 'tasks',
+    app: 'shop',
     version: 12,
-    tasks: [
-      { title: 'Sketch the protocol types', tag: 'protocol', done: true },
-      { title: 'Open an empty wgpu window', tag: 'renderer', done: false },
-      { title: 'Write the first Crystal component', tag: 'sdk', done: false }
-    ],
-    notes: 0
+    cart: 0,
+    cartTotal: 0,
+    travTab: 'Stay',
+    liked: false,
+    likes: 128,
+    products: [
+      { name: 'Trail boots', desc: 'Waterproof · sizes 7–13', price: 129, color: '#0E7569' },
+      { name: 'Canvas day pack', desc: '20L · recycled shell', price: 84, color: '#E8480C' },
+      { name: 'Merino base layer', desc: 'Midweight · 4 colours', price: 58, color: '#8A5A00' },
+      { name: 'Titanium bottle', desc: '750ml · insulated', price: 34, color: '#3E3D38' }
+    ]
   };
 
   var appsMeta = {
-    tasks:   { name: 'Tasks',   by: 'by Mara · publisher key verified' },
-    journal: { name: 'Journal', by: 'by Theo · publisher key verified' },
-    pantry:  { name: 'Pantry',  by: 'by June · publisher key verified' }
+    shop:   { name: 'Northwind — Shop', by: 'Storefront by Mara · signed in with your Mugen profile' },
+    travel: { name: 'Atlas — Kyoto trip', by: 'Travel planner by Theo · signed in with your Mugen profile' },
+    feed:   { name: 'Pulse — Feed', by: 'Media feed by June · signed in with your Mugen profile' }
   };
 
   function esc(s){
@@ -613,43 +735,58 @@
   function renderPane(){
     var meta = appsMeta[state.app];
     var head = '<div class="pane-head"><div><h3>' + meta.name + '</h3><p>' + meta.by + '</p></div><span class="verified">✓ KEY VERIFIED</span></div>';
-    if (state.app === 'tasks'){
-      var items = state.tasks.map(function(t, i){
-        return '<li class="task' + (t.done ? ' done' : '') + '"><button class="task-check" type="button" data-task="' + i + '" aria-label="Toggle task: ' + esc(t.title) + '">' + (t.done ? '✓' : '') + '</button><span>' + esc(t.title) + '</span><span class="tag">' + esc(t.tag) + '</span></li>';
+    if (state.app === 'shop'){
+      var cards = state.products.map(function(p, i){
+        return '<div class="prod"><div class="swatch" style="background:' + p.color + '" aria-hidden="true"></div><h4>' + esc(p.name) + '</h4><p>' + esc(p.desc) + '</p><div class="prod-row"><b>$' + p.price + '</b><button class="mini-btn" type="button" data-add="' + i + '" aria-label="Add ' + esc(p.name) + ' to cart">Add +</button></div></div>';
       }).join('');
       pane.innerHTML = head +
-        '<ul class="task-list">' + items + '</ul>' +
-        '<form class="add-row" id="addForm"><input id="addInput" type="text" placeholder="Add a task…" aria-label="New task title" maxlength="60" /><button type="submit">Add</button></form>';
-      var form = document.getElementById('addForm');
-      form.addEventListener('submit', function(e){
-        e.preventDefault();
-        var input = document.getElementById('addInput');
-        var val = input.value.trim();
-        if (!val) return;
-        state.tasks.push({ title: val, tag: 'event', done: false });
-        state.version++;
-        log('<span class="k">→ EVENT</span> input.submit <span class="dim">· idempotent · node #input-1</span>');
-        log('<span class="k2">← PATCH</span> Tasks <span class="dim">v' + state.version + ' · +1 node · dirty: list only</span>');
-        renderPane();
-      });
-      pane.querySelectorAll('[data-task]').forEach(function(btn){
+        '<div class="shop-grid">' + cards + '</div>' +
+        '<div class="cart-bar"><div>Cart · ' + state.cart + ' item' + (state.cart === 1 ? '' : 's') + ' <span>· checkout in-app, no popup, no new account</span></div><b>$' + state.cartTotal + '</b></div>';
+      pane.querySelectorAll('[data-add]').forEach(function(btn){
         btn.addEventListener('click', function(){
-          var i = parseInt(btn.getAttribute('data-task'), 10);
-          state.tasks[i].done = !state.tasks[i].done;
-          state.version++;
-          log('<span class="k">→ EVENT</span> checkbox.toggle <span class="dim">· task ' + (i + 1) + '</span>');
-          log('<span class="k2">← PATCH</span> Tasks <span class="dim">v' + state.version + ' · 1 node updated · no relayout of the rest</span>');
+          var i = parseInt(btn.getAttribute('data-add'), 10);
+          state.cart++; state.cartTotal += state.products[i].price; state.version++;
+          log('<span class="k">→ EVENT</span> button.click <span class="dim">· add_to_cart · ' + esc(state.products[i].name) + '</span>');
+          log('<span class="k2">← PATCH</span> Northwind <span class="dim">v' + state.version + ' · cart badge + total only · 0 JS sent</span>');
           renderPane();
         });
       });
-    } else if (state.app === 'journal'){
+    } else if (state.app === 'travel'){
+      var tabs = ['Flights','Stay','Eat'].map(function(t){
+        return '<button type="button" data-tab="' + t + '" aria-pressed="' + (state.travTab === t ? 'true' : 'false') + '">' + t + '</button>';
+      }).join('');
+      var rows = state.travTab === 'Flights'
+        ? '<li><span class="time">07:10</span><div><b>NYC → Kyoto · 1 stop</b><span>Arrives 15:40 next day · bag included · $612</span></div></li><li><span class="time">09:25</span><div><b>Return · direct</b><span>Departs 11:05 · arrives 09:40 same day · $598</span></div></li>'
+        : state.travTab === 'Stay'
+        ? '<li><span class="time">MAY 18</span><div><b>Machiya stay, Gion</b><span>4 nights · garden room · host verified by key</span></div></li><li><span class="time">MAY 22</span><div><b>Arashiyama ryokan</b><span>2 nights · onsen · breakfast included</span></div></li>'
+        : '<li><span class="time">DAY 2</span><div><b>Nishiki Market morning</b><span>Street-food walk · tamagoyaki, yuba, matcha</span></div></li><li><span class="time">DAY 4</span><div><b>Ramen alley, late</b><span>Two seats held under your profile — no re-sign-in</span></div></li>';
       pane.innerHTML = head +
-        '<div class="note-card"><h4>Why no address bar?</h4><p>Because an address is a place, and places get taken. An identity is a key, and keys don\'t move. Today I joined three apps and typed zero URLs.</p></div>' +
-        '<div class="note-card"><h4>Switching is instant</h4><p>Background apps keep their last tree and a bitmap snapshot. No reload, no spinner — resume and apply the patches you missed.</p></div>';
+        '<div class="trav-hero"><h4>Kyoto · May 17–23</h4><p>Flights, stays, and plans in one app — the kind of multi-step booking flow a webpage does today, with no tabs, no ads, and no checkout popups.</p></div>' +
+        '<div class="seg" role="group" aria-label="Trip category">' + tabs + '</div>' +
+        '<ul class="itin">' + rows + '</ul>';
+      pane.querySelectorAll('[data-tab]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          state.travTab = btn.getAttribute('data-tab'); state.version++;
+          log('<span class="k">→ EVENT</span> tab.select <span class="dim">· ' + state.travTab + '</span>');
+          log('<span class="k2">← PATCH</span> Atlas <span class="dim">v' + state.version + ' · list swapped · scroll kept</span>');
+          renderPane();
+        });
+      });
     } else {
       pane.innerHTML = head +
-        '<div class="note-card"><h4>This week</h4><p>Rice · Miso · Nori · Eggs · Spinach — a list owned by this app\'s server, rendered by Mugen, stored under this app\'s ID only. No other app can read it.</p></div>' +
-        '<div class="note-card"><h4>Permissions</h4><p>Pantry asked for its own storage and nothing else. That\'s all it will ever get unless you approve more.</p></div>';
+        '<div class="post"><div class="post-top"><span class="post-av" style="background:#0E7569">K</span><span><b>Keiko · Kyoto</b><small>2h · via her Pulse app</small></span></div><p>Sunrise at Fushimi Inari before the crowds — shot on the walk Atlas planned this morning.</p><div class="post-media">▶ Video · 0:42 — plays in the native Video node</div><div class="post-actions"><button class="mini-btn" type="button" id="likeBtn" aria-pressed="' + state.liked + '">' + (state.liked ? '♥ Liked' : '♡ Like') + '</button><button class="mini-btn" type="button" id="replyBtn">Reply</button><span class="count">' + state.likes + ' likes · 18 replies · no ads in this feed, ever</span></div></div>' +
+        '<div class="post"><div class="post-top"><span class="post-av" style="background:#E8480C">M</span><span><b>Mara · Northwind</b><small>5h</small></span></div><p>New trail boots just landed in the shop — open Northwind and your same profile, cart, and sizes are already there.</p></div>';
+      document.getElementById('likeBtn').addEventListener('click', function(){
+        state.liked = !state.liked; state.likes += state.liked ? 1 : -1; state.version++;
+        log('<span class="k">→ EVENT</span> button.click <span class="dim">· ' + (state.liked ? 'like' : 'unlike') + ' post</span>');
+        log('<span class="k2">← PATCH</span> Pulse <span class="dim">v' + state.version + ' · 1 node updated</span>');
+        renderPane();
+      });
+      document.getElementById('replyBtn').addEventListener('click', function(){
+        state.version++;
+        log('<span class="k">→ EVENT</span> input.focus <span class="dim">· reply composer · keyboard + screen-reader ready</span>');
+        log('<span class="k2">← PATCH</span> Pulse <span class="dim">v' + state.version + ' · composer opened by the app, not a popup</span>');
+      });
     }
   }
 
@@ -668,8 +805,8 @@
   });
 
   renderPane();
-  logSnapshot('Tasks', state.version);
-  log('<span class="dim">— shell —</span> publisher key pinned at join <span class="dim">· endpoint treated as a hint only</span>');
+  logSnapshot('Northwind', state.version);
+  log('<span class="dim">— shell —</span> one profile signed in <span class="dim">· publisher key pinned · 0 ads, 0 popups, 0 JS</span>');
 
   /* ---------- protocol tabs ---------- */
   var protoData = {
@@ -699,9 +836,9 @@
   var joined = false;
   joinBtn.addEventListener('click', function(){
     joined = !joined;
-    joinBtn.textContent = joined ? 'Joined ✓ — in your list' : 'Join Tasks';
+    joinBtn.textContent = joined ? 'Joined ✓ — in your list' : 'Join Northwind';
     joinMsg.textContent = joined
-      ? 'Pinned. Tasks is now in your joined list, with storage isolated under its app ID. Its server can move tomorrow — this key is what you trust.'
+      ? 'Pinned. Northwind is now in your joined list, signed in with your one Mugen profile — no new account to create — with storage isolated under its app ID. Its server can move tomorrow — this key is what you trust.'
       : 'The address behind this card can change. This key can\'t be faked.';
   });
   notNowBtn.addEventListener('click', function(){
