@@ -313,6 +313,29 @@
   .req-list strong{color:var(--ink);display:block;font-size:15px}
   .req-list .mono{font-size:12px;color:var(--muted)}
 
+  /* mailing list */
+  .signup-card{border:1.5px solid var(--line-strong);border-radius:18px;background:var(--panel);box-shadow:var(--shadow);padding:28px;max-width:760px}
+  .signup-card h3{margin:0 0 6px;font-size:20px;letter-spacing:-.01em}
+  .signup-card>p{margin:0 0 20px;color:var(--ink-2);font-size:15px;max-width:52ch}
+  .signup-form{display:flex;gap:10px}
+  @media(max-width:560px){ .signup-form{flex-direction:column} .signup-form .btn{justify-content:center} }
+  .signup-form input{flex:1;min-width:0;font:inherit;font-size:15px;padding:12px 14px;border:1px solid var(--line);border-radius:999px;background:var(--bg-2);color:var(--ink)}
+  .signup-form input::placeholder{color:var(--muted)}
+  .signup-form input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .signup-form .btn{flex:none;justify-content:center;cursor:pointer;font-family:inherit}
+  .signup-form .btn:disabled{opacity:.65;cursor:wait}
+  .signup-form .btn:disabled:hover{background:var(--ink);border-color:var(--line-strong);color:var(--bg)}
+  .signup-msg{margin:14px 0 0;font-size:14px;font-weight:600;color:var(--muted);min-height:22px}
+  .signup-msg:empty{min-height:0;margin-top:0}
+  .signup-msg.is-success{color:var(--teal)}
+  .signup-msg.is-error{color:var(--accent)}
+  .signup-note{margin:10px 0 0;font-size:13px;color:var(--muted)}
+  .hero-signup{margin-top:26px;border:1.5px solid var(--line-strong);border-radius:14px;background:var(--panel);box-shadow:var(--shadow);padding:18px;max-width:520px}
+  .hero-signup-title{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em;margin:0 0 4px}
+  .hero-signup-title span{color:var(--accent)}
+  .hero-signup p{margin:0 0 14px;font-size:14px;color:var(--ink-2)}
+  .hero-signup .signup-msg{margin-top:10px}
+
   /* final */
   .final{padding:84px 0;text-align:left;position:relative;overflow:hidden}
   .final .jp-big{font-size:clamp(60px,10vw,120px);font-weight:900;line-height:1;color:var(--accent)}
@@ -337,6 +360,7 @@
       <a href="#how">How it works</a>
       <a href="#creators">For creators</a>
       <a href="#start">Start building</a>
+      <a href="#updates">Updates</a>
       <a class="btn small" href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   </div>
@@ -363,6 +387,16 @@
         <div class="hero-ctas">
           <a class="btn" href="https://github.com/davidsth/mugen" target="_blank" rel="noopener">View the repo on GitHub ↗</a>
           <a class="btn ghost" href="#how">See how it works ↓</a>
+        </div>
+        <div class="hero-signup">
+          <strong class="hero-signup-title">Get Mugen updates <span>— join the mailing list</span></strong>
+          <p>Milestones, releases, and first chances to try it. No spam, no ads.</p>
+          <form id="emailFormHero" class="signup-form">
+            <label for="emailInputHero" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">Email address</label>
+            <input type="email" id="emailInputHero" placeholder="Enter your email" required autocomplete="email" />
+            <button class="btn" type="submit" id="subscribeBtnHero">Subscribe</button>
+          </form>
+          <p id="responseMessageHero" class="signup-msg" aria-live="polite"></p>
         </div>
         <dl class="hero-facts">
           <div><dt>Client</dt><dd>Rust + wgpu</dd></div>
@@ -663,6 +697,28 @@
     </div>
   </section>
 
+  <!-- MAILING LIST -->
+  <section class="block" id="updates">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">08 — MAILING LIST</span>
+        <h2>Follow Mugen as it ships.</h2>
+        <p>Mugen is early and building in the open. Leave your email and you'll hear about milestones, releases, and ways to try it — straight from the project, saved to our signup sheet.</p>
+      </div>
+      <div class="signup-card">
+        <h3>Join the mailing list</h3>
+        <p>One email when there's something worth sharing. No spam, no ads — that would be off-brand.</p>
+        <form id="emailForm" class="signup-form">
+          <label for="emailInput" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">Email address</label>
+          <input type="email" id="emailInput" placeholder="Enter your email" required autocomplete="email" />
+          <button class="btn" type="submit" id="subscribeBtn">Subscribe</button>
+        </form>
+        <p id="responseMessage" class="signup-msg" aria-live="polite"></p>
+        <p class="signup-note">We'll only email you about Mugen. Unsubscribe anytime by replying to an update.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- FINAL -->
   <div class="final">
     <div class="wrap">
@@ -861,6 +917,61 @@
     }
   });
 })();
+</script>
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzR3QpHmN8GdR-LhwysDShfWD6K_XsLd1TLly7Km64AXxADubPGCHX95eRUT0iUs9JjsQ/exec';
+
+  function attachEmailForm(formId, inputId, messageId, buttonId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    const emailInput = document.getElementById(inputId);
+    const messageEl = document.getElementById(messageId);
+    const submitBtn = buttonId ? document.getElementById(buttonId) : null;
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const email = emailInput.value;
+      messageEl.style.color = '';
+      messageEl.className = 'signup-msg';
+      messageEl.textContent = 'Saving...';
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify({ email: email })
+        });
+
+        const result = await response.json();
+
+        // Handle success vs. error responses from the script
+        if (result.result === 'success') {
+          messageEl.style.color = 'green';
+          messageEl.className = 'signup-msg is-success';
+          messageEl.textContent = result.message;
+          form.reset();
+        } else {
+          messageEl.style.color = 'red';
+          messageEl.className = 'signup-msg is-error';
+          messageEl.textContent = result.message;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        messageEl.style.color = 'red';
+        messageEl.className = 'signup-msg is-error';
+        messageEl.textContent = 'An unexpected error occurred. Please try again.';
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+
+  attachEmailForm('emailForm', 'emailInput', 'responseMessage', 'subscribeBtn');
+  attachEmailForm('emailFormHero', 'emailInputHero', 'responseMessageHero', 'subscribeBtnHero');
 </script>
 </body>
 </html>
