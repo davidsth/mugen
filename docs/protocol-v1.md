@@ -68,9 +68,17 @@ Scheme validation is not authorization. The resource broker must additionally en
 
 Input events should use a reliable, ordered control path distinct from coalescible visual updates. Event IDs support deduplication; the app should retain a bounded recent-ID window and make handlers idempotent. Patches can be coalesced to roughly one per frame (16 ms), but must not starve input or accessibility updates. Reconnect starts with version negotiation and a fresh snapshot unless bounded replay is explicitly added later.
 
-## Accessibility
+## Accessibility — first-class protocol requirement
 
-Every interactive node must expose an accessible name/role/state and keyboard behavior. The native renderer should produce an accesskit semantic tree. A control is not complete until it can be operated without a pointer.
+Accessibility is a core product requirement and a release-blocking acceptance criterion, not a later polish pass. Every component and interaction must be designed accessibly from its first implementation.
+
+- **WAI-ARIA alignment:** the component semantic model must support applicable WAI-ARIA roles, accessible-name computation, states, properties, and relationships. Follow the WAI-ARIA specification and WAI-ARIA Authoring Practices Guide (APG) patterns for composite widgets and interaction behavior. Use native-equivalent semantics by default; do not require app authors to manually recreate semantics inherent to a component.
+- **Typed semantics, not arbitrary attributes:** expose a validated, typed accessibility model in the protocol (role, accessible name/description, states, properties, relationships such as labelled-by/described-by/controls/owns, and live-region settings). Support relevant `aria-*` concepts without accepting arbitrary strings or allowing contradictory role/state combinations. Validate ID references and ensure they resolve within the app's tree and permitted scope.
+- **Native accessibility bridge:** the Rust renderer must map the semantic model into AccessKit and platform accessibility APIs (for example, UI Automation on Windows, NSAccessibility on macOS, and AT-SPI on Linux). WAI-ARIA is the semantic compatibility contract; it is not a requirement to embed a browser or expose a DOM.
+- **Keyboard and focus:** every interactive component must have a documented keyboard interaction model, logical focus order, visible focus indication, correct disabled/expanded/selected/checked states, and predictable focus restoration after updates. Composite widgets must implement the relevant APG keyboard pattern.
+- **Names and announcements:** interactive controls must have meaningful accessible names; non-text content needs appropriate alternatives; status changes and validation errors must be announced through suitable live-region/status semantics without excessive duplicate announcements.
+- **No pointer-only features:** all functionality must be operable with keyboard and assistive technology. Do not communicate state by color, shape, position, or animation alone; respect reduced-motion and text scaling where applicable.
+- **Testing gate:** each component needs semantic-tree tests and keyboard/focus tests. End-to-end acceptance must include screen-reader testing on supported desktop platforms. A feature that cannot be represented and operated correctly through the accessibility tree is not complete.
 
 ## Explicit non-goals for v0.2
 
