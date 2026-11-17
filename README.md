@@ -1,6 +1,7 @@
 # Mugen — Native app browser (early development)
 
-Mugen is an experimental desktop browser replacement. The browser is a Rust native application; apps are separate Crystal web servers that send a typed UI tree. The browser renders the tree and never executes app code.
+Mugen is an experimental desktop browser replacement since I am tired of ads and spyware, popups and accessibility issues.
+The browser is a Rust native application; apps are separate Crystal web servers that send a typed UI tree. The browser renders the tree and never executes app code.
 
 ## Workspace crates
 
