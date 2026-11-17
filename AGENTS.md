@@ -200,7 +200,7 @@ each with their own CI if they want one.
    `protocol` for message/validation, `layout` for sizing/placement,
    `renderer` for painting, `shell` for list/lifecycle/local-adding.
 2. Keep the public protocol unchanged unless the task explicitly
-   says to bump it. If you bump it, update `docs/protocol-v0.md`
+   says to bump it. If you bump it, update `docs/protocol-v1.md`
    and note that every app repo must mirror the change — do not
    claim app repos are updated until their owners update them.
 3. Prefer a failing test in `mugen-protocol` first for validation
@@ -238,8 +238,8 @@ unless it is a general node/capability with a protocol version.
 - Keep diffs small and repo-scoped: a browser PR should not also
   rewrite an app, and vice versa, unless the protocol changed.
 - Documentation lives with the code it describes: protocol changes
-  update `docs/protocol-v0.md`, browser changes update
-  `browser/README.md`.
+  update `docs/protocol-v1.md`, interaction changes update
+  `docs/interaction-model.md`, and browser changes update `README.md`.
 
 ## 8. What NOT to do (v1)
 
