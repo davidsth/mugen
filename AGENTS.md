@@ -16,6 +16,8 @@ Mugen (Japanese: infinite / limitless) is a desktop browser replacement.
 - Users **join apps**, like joining a server list. They do not type URLs.
 - Mugen's core promises, in order: no URLs, ad/popup free, one single
   account/profile for all apps, no JavaScript bloat, accessibility first.
+  Accessibility is release-blocking: align component semantics with WAI-ARIA
+  and APG, and expose them through AccessKit/native platform APIs.
 
 If a change would require HTML, a URL bar, a third-party script, an
 ad/popup node type, or running untrusted code inside the browser,
@@ -117,11 +119,13 @@ Identity, not URL (v1, after v0 renders):
 
 ## 4. Protocol v1 — typed UI and interaction contract
 
-The current Rust protocol crate is v1. See `docs/protocol-v1.md` for message semantics, typed properties, event delivery, validation limits, and explicit non-goals. See `docs/interaction-model.md` for the browser/app responsibility split and event round trip. `docs/protocol-v0.md` is historical context only.
+The current Rust protocol crate is v1. See `docs/protocol-v1.md` for message semantics, typed properties, event delivery, validation limits, accessibility semantics, and explicit non-goals. See `docs/interaction-model.md` for the browser/app responsibility split, event round trip, and accessibility-first component requirements. `docs/protocol-v0.md` is historical context only.
+
+**Accessibility is a first-class requirement.** Components must follow applicable WAI-ARIA roles, names, states, properties, relationships, and APG keyboard patterns. The Rust browser maps these semantics through AccessKit to native platform accessibility APIs; do not add a DOM/WebView. Every component requires keyboard, focus, semantic-tree, and screen-reader testing. A feature inaccessible to assistive technology is unfinished.
 
 Protocol changes must update the v1 spec and keep the Crystal mirror in its separate repository synchronized. Do not add Crystal code or an SDK to this repository.
 
-## 4a. Protocol v0 — historical compatibility notes
+## 4a. Protocol v0 — historical compatibility notes (superseded by v1)
 
 Transport: WebSocket. Production encoding is binary (postcard or
 FlatBuffers — pick one before the first demo; do NOT use JSON on the
@@ -150,9 +154,9 @@ version bump and a reason in the PR description):
   Declarative nodes first, so theming, hit-testing, and accessibility
   stay intact.
 - Text: do NOT write a shaper. Use cosmic-text / HarfBuzz underneath.
-- Accessibility: expose a semantic tree via accesskit. Accessibility
-  first is a core promise, not a polish item. A feature that cannot
-  be expressed in the accessibility tree is not done.
+- Accessibility: historical v0 note; the normative v1 requirements are
+  in `docs/protocol-v1.md` and `docs/interaction-model.md`. Use AccessKit
+  and platform accessibility APIs; WAI-ARIA/APG alignment is mandatory.
 
 Validation, hard, in Rust, before layout (see
 `browser/crates/protocol/src/lib.rs`):
