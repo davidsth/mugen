@@ -1,55 +1,30 @@
-# browser/ — The Mugen Browser (Rust)
+# Mugen — Native app browser (early development)
 
-This is the desktop app users install. It renders apps. It never runs
-app code, never loads HTML/CSS/JS, and never opens arbitrary URLs.
+Mugen is an experimental desktop browser replacement. The browser is a Rust native application; apps are separate Crystal web servers that send a typed UI tree. The browser renders the tree and never executes app code.
 
-This folder is the whole repo's Rust workspace. There is no Crystal
-code in this repo: apps live in separate repos and run as their own
-web servers.
+## Workspace crates
 
-## Crates
+- `crates/shell/` — winit + softbuffer shell, joined-app list, click-to-switch, and local app endpoint registration.
+- `crates/renderer/` — renderer groundwork; not yet wired into the shell.
+- `crates/layout/` — typed layout groundwork; not yet wired into the shell.
+- `crates/protocol/` — protocol v1 types and validation for snapshots, patches, and interaction events.
 
-- `crates/shell/` — the runnable browser: winit + softbuffer window
-  (v0.1), joined-app list, click-to-switch, local-app parsing
-  (`--app <host:port>` / `MUGEN_LOCAL_APP`), lifecycle placeholders.
-- `crates/renderer/` — wgpu display list, batching, texture atlas,
-  culling (Step 3). Text via cosmic-text/HarfBuzz underneath;
-  accessibility via accesskit. Do not write a GPU backend or a text
-  shaper here. It does not yet replace softbuffer in the shell.
-- `crates/layout/` — typed constraint layout (Row/Column/Stack/Grid),
-  two-pass measure/place, dirty tracking (Step 3). Typed values only,
-  no CSS.
-- `crates/protocol/` — Snapshot, Patch, Event, and hard validation.
-  The Crystal side mirrors this protocol in its own repo; it does
-  not import this crate.
+## Current status
 
-## Commands (run from this folder, not the repo root)
+The shell can register a local app endpoint and show a placeholder pane. It does **not** yet connect to the app's WebSocket or render a live Snapshot. The renderer and layout crates remain groundwork. Protocol v1 is a typed contract and validation layer, not a completed interactive runtime.
+
+## Protocol and architecture
+
+Read the repository-root `AGENTS.md` for the architectural contract, `docs/protocol-v1.md` for the wire model, `docs/interaction-model.md` for event flow and local interaction, and `docs/crystal-sdk.md` for the separate app SDK contract. The old `docs/protocol-v0.md` is historical context.
+
+No HTML/CSS/JS, WebView, arbitrary URL navigation, embedded Crystal runtime, or app code inside the browser process.
+
+## Commands
+
+Run from the repository root:
 
 ```sh
 cargo test -p mugen-protocol
-cargo run -p mugen-shell
-cargo run -p mugen-shell -- --app 127.0.0.1:4000
 cargo fmt --check
 cargo clippy --workspace -- -D warnings
 ```
-
-## Adding a local app
-
-Run the app's server first (see its own repo — e.g. the demo app on
-`127.0.0.1:4000`), then pass its IP:port to the browser as above.
-The browser logs `manifest: http://<endpoint>/manifest` and
-`websocket: ws://<endpoint>/ws` and adds a sidebar icon.
-
-v0.1 limitation, stated plainly: the shell registers the endpoint
-and shows a placeholder pane. It does not yet fetch/render the
-app's Snapshot over WebSocket. That is Step 5.
-
-## Rules for this folder
-
-- Shell owns only: discovery, join/leave, list, switching, lifecycle,
-  auth, permissions, storage. Everything inside an app window belongs
-  to the app.
-- Validate every tree in `protocol` before layout. Reject bad trees,
-  keep the shell alive.
-- No WebView, no address bar, no ad/popup node types.
-- See the repo-root `AGENTS.md` for the full boundary and protocol rules.
