@@ -32,7 +32,20 @@ session.on("tasks.add") do |event, state|
 end
 ```
 
-The eventual shard should provide typed node/layout/style builders, typed event values, a HandlerRegistry with explicit name-to-handler registration, a per-client Session, snapshot generation, monotonically versioned patch generation, a stable-ID tree reconciler, a codec abstraction (initially JSON), bounded event deduplication, and reconnect snapshot behavior.
+The eventual shard should provide typed node/layout/style builders, typed event values, a typed WAI-ARIA-aligned accessibility API, a HandlerRegistry with explicit name-to-handler registration, a per-client Session, snapshot generation, monotonically versioned patch generation, a stable-ID tree reconciler, a codec abstraction (initially JSON), bounded event deduplication, and reconnect snapshot behavior.
+
+## Accessibility API requirements
+
+The Crystal DSL must make accessible component construction the easy/default path:
+
+- Components provide correct built-in roles and keyboard behavior wherever their semantics are known.
+- Authors can set accessible names/descriptions, labels, states, properties, relationships (labelled-by, described-by, controls, owns), and live-region behavior through typed methods.
+- The API follows WAI-ARIA and APG guidance while exposing no raw HTML or DOM attributes.
+- Component documentation and examples show accessible names, keyboard usage, and dynamic announcements where relevant.
+- The SDK validates incompatible or unresolved semantic references before sending a tree. The Rust browser performs its own validation; server-side checks are not a security boundary.
+- Native platform accessibility is provided by the browser's AccessKit bridge. Crystal semantics must survive protocol serialization without being flattened into presentation-only text.
+
+A future component is not considered complete until its role, name, state, keyboard pattern, focus behavior, and screen-reader output have been specified and tested.
 
 ## State and patch generation
 
