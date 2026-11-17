@@ -115,7 +115,13 @@ Identity, not URL (v1, after v0 renders):
   issue identity. A compromised directory cannot fake an app without
   its private key. Never commit a private/signing key (see .gitignore).
 
-## 4. Protocol v0 — do not break this casually
+## 4. Protocol v1 — typed UI and interaction contract
+
+The current Rust protocol crate is v1. See `docs/protocol-v1.md` for message semantics, typed properties, event delivery, validation limits, and explicit non-goals. See `docs/interaction-model.md` for the browser/app responsibility split and event round trip. `docs/protocol-v0.md` is historical context only.
+
+Protocol changes must update the v1 spec and keep the Crystal mirror in its separate repository synchronized. Do not add Crystal code or an SDK to this repository.
+
+## 4a. Protocol v0 — historical compatibility notes
 
 Transport: WebSocket. Production encoding is binary (postcard or
 FlatBuffers — pick one before the first demo; do NOT use JSON on the
