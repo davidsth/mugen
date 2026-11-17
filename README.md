@@ -8,7 +8,7 @@ The browser is a Rust native application; apps are separate Crystal web servers 
 - `crates/shell/` — winit + softbuffer shell, joined-app list, click-to-switch, and local app endpoint registration.
 - `crates/renderer/` — renderer groundwork; not yet wired into the shell.
 - `crates/layout/` — typed layout groundwork; not yet wired into the shell.
-- `crates/protocol/` — protocol v1 types and validation for snapshots, patches, and interaction events.
+- `crates/protocol/` — protocol v1 types and validation for snapshots, patches, interaction events, and accessibility semantics.
 
 ## Current status
 
@@ -16,7 +16,7 @@ The shell can register a local app endpoint and show a placeholder pane. It does
 
 ## Protocol and architecture
 
-Read the repository-root `AGENTS.md` for the architectural contract, `docs/protocol-v1.md` for the wire model, `docs/interaction-model.md` for event flow and local interaction, and `docs/crystal-sdk.md` for the separate app SDK contract. The old `docs/protocol-v0.md` is historical context.
+Read the repository-root `AGENTS.md` for the architectural contract, `docs/protocol-v1.md` for the wire model and WAI-ARIA-aligned accessibility requirements, `docs/interaction-model.md` for event flow and accessibility-first interaction, and `docs/crystal-sdk.md` for the separate app SDK contract. The old `docs/protocol-v0.md` is historical context.
 
 No HTML/CSS/JS, WebView, arbitrary URL navigation, embedded Crystal runtime, or app code inside the browser process.
 
