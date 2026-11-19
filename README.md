@@ -1,27 +1,64 @@
-# Mugen — Native app browser (early development)
+# Mugen
 
-Mugen is an experimental desktop browser replacement since I am tired of ads and spyware, popups and accessibility issues.
-It also does not use traditional HTML, CSS or JS stack at all. I am tired of the node stack as well.
+**A native desktop browser replacement for application experiences beyond the web stack.**
 
+Mugen explores a different way to run applications: a Rust desktop shell renders native UI, while independent Crystal application servers own application behavior. A typed protocol connects the two.
 
-## Workspace crates
+No HTML, CSS, JavaScript, WebView, or embedded app runtime.
 
-- `crates/shell/` — winit + softbuffer shell, joined-app list, click-to-switch, and local app endpoint registration.
-- `crates/renderer/` — renderer groundwork; not yet wired into the shell.
-- `crates/layout/` — typed layout groundwork; not yet wired into the shell.
-- `crates/protocol/` — protocol v1 types and validation for snapshots, patches, interaction events, and accessibility semantics.
+## Why Mugen?
 
-## Current status
+- **Native UI:** rendering, layout, input, and accessibility live in the browser.
+- **Independent apps:** each app runs as a separate process with its own lifecycle and boundaries.
+- **Crystal backend:** apps use Crystal for routes, state, data, and business logic.
+- **Typed protocol:** UI snapshots, updates, and interaction events are explicit and validated.
+- **Accessibility-first:** semantic UI and keyboard interaction are core requirements.
 
-The shell can register a local app endpoint and show a placeholder pane. It does **not** yet connect to the app's WebSocket or render a live Snapshot. The renderer and layout crates remain groundwork. Protocol v1 is a typed contract and validation layer, not a completed interactive runtime.
+## Architecture
 
-## Protocol and architecture
+![Mugen architecture](docs/images/mugen-architecture.svg)
 
-Read the repository-root `AGENTS.md` for the architectural contract, `docs/protocol-v1.md` for the wire model and WAI-ARIA-aligned accessibility requirements, `docs/interaction-model.md` for event flow and accessibility-first interaction, and `docs/crystal-sdk.md` for the separate app SDK contract. The old `docs/protocol-v0.md` is historical context.
+The browser owns discovery, app lifecycle, permissions, storage, presentation, input, and accessibility. App servers own routes, UI state, data, and business logic. The browser and app communicate through the protocol—not shared code or a web runtime.
 
-No HTML/CSS/JS, WebView, arbitrary URL navigation, embedded Crystal runtime, or app code inside the browser process.
+## Interaction flow
 
-## Commands
+![Mugen interaction flow](docs/images/mugen-interaction-flow.svg)
+
+User input is handled locally for immediate feedback, then sent as a typed event. The app updates its state and returns a versioned patch; the browser applies it to the native UI and accessibility tree.
+
+## Project status
+
+| Component | Status |
+| --- | --- |
+| Rust workspace and desktop shell | Initial implementation |
+| Typed protocol v1 and validation | Draft implemented |
+| Layout and renderer | Groundwork |
+| WebSocket app connection | Not implemented |
+| Live native UI rendering | Not implemented |
+| Crystal SDK | Specification only |
+| Native accessibility bridge | Specification only |
+
+This is an early-stage experiment; the table reflects the current implementation, not a promise of completeness.
+
+## Repository
+
+```
+mugen/
+├── crates/
+│   ├── shell/       # Desktop shell and app lifecycle groundwork
+│   ├── renderer/    # Native rendering groundwork
+│   ├── layout/     # Typed layout groundwork
+│   └── protocol/   # Protocol types and validation
+├── docs/
+│   ├── images/     # Architecture diagrams
+│   ├── protocol-v1.md
+│   ├── interaction-model.md
+│   └── crystal-sdk.md
+├── Cargo.toml
+└── README.md
+```
+
+## Development
 
 Run from the repository root:
 
@@ -30,3 +67,13 @@ cargo test -p mugen-protocol
 cargo fmt --check
 cargo clippy --workspace -- -D warnings
 ```
+
+## Design constraints
+
+Mugen is not a web browser with a different skin. It does not embed a web engine, execute web technologies, navigate arbitrary URLs, or load app code into the browser process. Accessibility is release-blocking and follows WAI-ARIA/APG semantics, mapped to native platform accessibility APIs.
+
+See [AGENTS.md](AGENTS.md) for the architectural contract and [docs](docs/) for protocol and interaction details.
+
+---
+
+Mugen is experimental. The goal is to explore a simpler, safer, more accessible way to build desktop application experiences.
