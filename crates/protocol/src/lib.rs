@@ -37,13 +37,90 @@ pub enum EventErrorCode { UnknownNode, UnknownHandler, InvalidValue, StaleVersio
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AccessibilityRole {
-    Generic, Button, Checkbox, Radio, Switch, Textbox, Searchbox, Combobox,
-    List, ListItem, ListBox, Option, Menu, MenuBar, MenuItem,
-    MenuItemCheckbox, MenuItemRadio, RadioGroup, TabList, Tab, TabPanel,
-    Tree, TreeItem, TreeGrid, Grid, GridCell, Row, ColumnHeader, RowHeader,
-    Table, Group, Dialog, AlertDialog, Alert, Status, ProgressBar, Slider,
-    SpinButton, Meter, Scrollbar, Separator, Image, Link, Heading, Toolbar,
-    Navigation, Main, Banner, ContentInfo, Form, Region, Article, Paragraph,
+    Alert,
+    AlertDialog,
+    Application,
+    Article,
+    Banner,
+    Blockquote,
+    Button,
+    Caption,
+    Cell,
+    Checkbox,
+    Code,
+    ColumnHeader,
+    Combobox,
+    Complementary,
+    ContentInfo,
+    Definition,
+    Deletion,
+    Dialog,
+    /// Deprecated in WAI-ARIA 1.2; retained for compatibility.
+    Directory,
+    Document,
+    Emphasis,
+    Feed,
+    Figure,
+    Form,
+    Generic,
+    Grid,
+    GridCell,
+    Group,
+    Heading,
+    Image,
+    Insertion,
+    Link,
+    List,
+    ListBox,
+    ListItem,
+    Log,
+    Main,
+    Marquee,
+    Math,
+    Menu,
+    MenuBar,
+    MenuItem,
+    MenuItemCheckbox,
+    MenuItemRadio,
+    Meter,
+    Navigation,
+    None,
+    Note,
+    Option,
+    Paragraph,
+    Presentation,
+    ProgressBar,
+    Radio,
+    RadioGroup,
+    Region,
+    Row,
+    RowGroup,
+    RowHeader,
+    Scrollbar,
+    Search,
+    Searchbox,
+    Separator,
+    Slider,
+    SpinButton,
+    Status,
+    Strong,
+    Subscript,
+    Superscript,
+    Switch,
+    Tab,
+    Table,
+    TabList,
+    TabPanel,
+    Term,
+    Textbox,
+    Time,
+    Timer,
+    Toolbar,
+    Tooltip,
+    Tree,
+    TreeGrid,
+    TreeItem,
+    Window,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -65,7 +142,10 @@ pub enum PopupKind { Menu, ListBox, Tree, Grid, Dialog }
 pub enum LivePoliteness { Off, Polite, Assertive }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LiveRelevant { Additions, Removals, Text }
+pub enum LiveRelevant { Additions, Removals, Text, All }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AutoComplete { Inline, List, Both }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SortState { None, Ascending, Descending, Other }
@@ -95,6 +175,13 @@ pub struct AccessibilityStates {
     pub position_in_set: Option<u32>,
     pub set_size: Option<u32>,
     pub sort: Option<SortState>,
+    pub autocomplete: Option<AutoComplete>,
+    pub row_count: Option<i32>,
+    pub column_count: Option<i32>,
+    pub row_index: Option<u32>,
+    pub column_index: Option<u32>,
+    pub row_span: Option<u32>,
+    pub column_span: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -221,9 +308,10 @@ pub enum ValidationError {
     ZeroNodeId, TooDeep, TooManyNodes, TooManyOperations, TextTooLong,
     EventTextTooLong, DuplicateId(u64), InvalidHandler, InvalidNumber,
     InvalidResourceScheme, InvalidVersion, DuplicateOperation(u64),
-    EmptyAccessibilityName, UnknownAccessibilityReference(u64),
-    DuplicateAccessibilityReference(u64), MultipleAccessibilityOwners(u64),
-    AccessibilityOwnershipCycle(u64), InvalidAccessibilityState, InvalidAccessibilityRange,
+    EmptyAccessibilityName, EmptyAccessibilityRoleDescription, NameProhibitedForRole,
+    UnknownAccessibilityReference(u64), MultipleAccessibilityOwners(u64),
+    AccessibilityOwnershipCycle(u64), InvalidActiveDescendant(u64),
+    InvalidAccessibilityState, InvalidAccessibilityRange, InvalidLiveRegionConfiguration,
 }
 
 pub fn validate_snapshot(snapshot: &Snapshot) -> Result<(), ValidationError> {
@@ -300,21 +388,84 @@ fn implicit_accessibility_role(kind: NodeKind) -> AccessibilityRole {
     }
 }
 
+fn role_prohibits_name(role: AccessibilityRole) -> bool {
+    matches!(
+        role,
+        AccessibilityRole::Caption
+            | AccessibilityRole::Code
+            | AccessibilityRole::Deletion
+            | AccessibilityRole::Emphasis
+            | AccessibilityRole::Generic
+            | AccessibilityRole::Insertion
+            | AccessibilityRole::None
+            | AccessibilityRole::Paragraph
+            | AccessibilityRole::Presentation
+            | AccessibilityRole::Strong
+            | AccessibilityRole::Subscript
+            | AccessibilityRole::Superscript
+    )
+}
+
+fn role_supports_invalid(role: AccessibilityRole) -> bool {
+    matches!(
+        role,
+        AccessibilityRole::Application
+            | AccessibilityRole::Checkbox
+            | AccessibilityRole::Combobox
+            | AccessibilityRole::GridCell
+            | AccessibilityRole::ListBox
+            | AccessibilityRole::RadioGroup
+            | AccessibilityRole::Slider
+            | AccessibilityRole::SpinButton
+            | AccessibilityRole::Textbox
+            | AccessibilityRole::Tree
+            | AccessibilityRole::ColumnHeader
+            | AccessibilityRole::RowHeader
+            | AccessibilityRole::Searchbox
+            | AccessibilityRole::Switch
+            | AccessibilityRole::TreeGrid
+    )
+}
+
 fn validate_accessibility(
     accessibility: &Accessibility,
     node_kind: NodeKind,
 ) -> Result<(), ValidationError> {
-    if accessibility.name.as_ref().is_some_and(|name| name.trim().is_empty()) {
-        return Err(ValidationError::EmptyAccessibilityName);
-    }
-
     let role = accessibility.role.unwrap_or_else(|| implicit_accessibility_role(node_kind));
     let states = &accessibility.states;
 
+    if accessibility.name.as_ref().is_some_and(|name| name.trim().is_empty()) {
+        return Err(ValidationError::EmptyAccessibilityName);
+    }
+    if accessibility.name.is_some() && role_prohibits_name(role) {
+        return Err(ValidationError::NameProhibitedForRole);
+    }
+    if accessibility
+        .role_description
+        .as_ref()
+        .is_some_and(|description| description.trim().is_empty())
+    {
+        return Err(ValidationError::EmptyAccessibilityRoleDescription);
+    }
+
     if states.checked.is_some()
-        && !matches!(role, AccessibilityRole::Checkbox | AccessibilityRole::Radio
-            | AccessibilityRole::Switch | AccessibilityRole::MenuItemCheckbox
-            | AccessibilityRole::MenuItemRadio)
+        && !matches!(
+            role,
+            AccessibilityRole::Checkbox
+                | AccessibilityRole::Radio
+                | AccessibilityRole::Switch
+                | AccessibilityRole::MenuItemCheckbox
+                | AccessibilityRole::MenuItemRadio
+                | AccessibilityRole::Option
+        )
+    {
+        return Err(ValidationError::InvalidAccessibilityState);
+    }
+    if states.checked == Some(CheckedState::Mixed)
+        && !matches!(
+            role,
+            AccessibilityRole::Checkbox | AccessibilityRole::MenuItemCheckbox
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
@@ -322,92 +473,151 @@ fn validate_accessibility(
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if states.selected.is_some()
-        && !matches!(role, AccessibilityRole::Option | AccessibilityRole::Tab
-            | AccessibilityRole::TreeItem | AccessibilityRole::GridCell
-            | AccessibilityRole::Row | AccessibilityRole::ColumnHeader
-            | AccessibilityRole::RowHeader)
+        && !matches!(
+            role,
+            AccessibilityRole::GridCell
+                | AccessibilityRole::Option
+                | AccessibilityRole::Row
+                | AccessibilityRole::Tab
+                | AccessibilityRole::TreeItem
+                | AccessibilityRole::ColumnHeader
+                | AccessibilityRole::RowHeader
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if states.expanded.is_some()
-        && !matches!(role, AccessibilityRole::Button | AccessibilityRole::Link
-            | AccessibilityRole::Combobox | AccessibilityRole::MenuItem
-            | AccessibilityRole::MenuItemCheckbox | AccessibilityRole::MenuItemRadio
-            | AccessibilityRole::TreeItem | AccessibilityRole::Row | AccessibilityRole::Group)
+        && !matches!(
+            role,
+            AccessibilityRole::Application
+                | AccessibilityRole::Button
+                | AccessibilityRole::Checkbox
+                | AccessibilityRole::Combobox
+                | AccessibilityRole::GridCell
+                | AccessibilityRole::Link
+                | AccessibilityRole::ListBox
+                | AccessibilityRole::MenuItem
+                | AccessibilityRole::Row
+                | AccessibilityRole::RowHeader
+                | AccessibilityRole::Tab
+                | AccessibilityRole::TreeItem
+                | AccessibilityRole::ColumnHeader
+                | AccessibilityRole::MenuItemCheckbox
+                | AccessibilityRole::MenuItemRadio
+                | AccessibilityRole::Switch
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if states.required
-        && !matches!(role, AccessibilityRole::Checkbox | AccessibilityRole::Radio
-            | AccessibilityRole::Switch | AccessibilityRole::Textbox
-            | AccessibilityRole::Searchbox | AccessibilityRole::Combobox
-            | AccessibilityRole::ListBox | AccessibilityRole::SpinButton)
+        && !matches!(
+            role,
+            AccessibilityRole::Checkbox
+                | AccessibilityRole::Combobox
+                | AccessibilityRole::GridCell
+                | AccessibilityRole::ListBox
+                | AccessibilityRole::RadioGroup
+                | AccessibilityRole::SpinButton
+                | AccessibilityRole::Textbox
+                | AccessibilityRole::Tree
+                | AccessibilityRole::ColumnHeader
+                | AccessibilityRole::RowHeader
+                | AccessibilityRole::Searchbox
+                | AccessibilityRole::Switch
+                | AccessibilityRole::TreeGrid
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if states.read_only
-        && !matches!(role, AccessibilityRole::Textbox | AccessibilityRole::Searchbox
-            | AccessibilityRole::Combobox | AccessibilityRole::Slider
-            | AccessibilityRole::SpinButton)
+        && !matches!(
+            role,
+            AccessibilityRole::Checkbox
+                | AccessibilityRole::Combobox
+                | AccessibilityRole::Grid
+                | AccessibilityRole::GridCell
+                | AccessibilityRole::ListBox
+                | AccessibilityRole::RadioGroup
+                | AccessibilityRole::Slider
+                | AccessibilityRole::SpinButton
+                | AccessibilityRole::Textbox
+                | AccessibilityRole::ColumnHeader
+                | AccessibilityRole::RowHeader
+                | AccessibilityRole::Searchbox
+                | AccessibilityRole::Switch
+                | AccessibilityRole::TreeGrid
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
-    if states.invalid.is_some()
-        && !matches!(role, AccessibilityRole::Checkbox | AccessibilityRole::Radio
-            | AccessibilityRole::Switch | AccessibilityRole::Textbox
-            | AccessibilityRole::Searchbox | AccessibilityRole::Combobox
-            | AccessibilityRole::Slider | AccessibilityRole::SpinButton)
+    if states.invalid.is_some() && !role_supports_invalid(role) {
+        return Err(ValidationError::InvalidAccessibilityState);
+    }
+    if states.modal
+        && !matches!(role, AccessibilityRole::Dialog | AccessibilityRole::AlertDialog)
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
-    if states.modal && !matches!(role, AccessibilityRole::Dialog | AccessibilityRole::AlertDialog) {
-        return Err(ValidationError::InvalidAccessibilityState);
-    }
-    if states.multiline.is_some() && role != AccessibilityRole::Textbox {
+    if states.multiline.is_some()
+        && !matches!(role, AccessibilityRole::Textbox | AccessibilityRole::Searchbox)
+    {
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if states.multiselectable.is_some()
-        && !matches!(role, AccessibilityRole::Grid | AccessibilityRole::ListBox
-            | AccessibilityRole::Tree | AccessibilityRole::TreeGrid | AccessibilityRole::TabList)
-    {
-        return Err(ValidationError::InvalidAccessibilityState);
-    }
-    if states.current.is_some()
-        && !matches!(role, AccessibilityRole::Link | AccessibilityRole::MenuItem
-            | AccessibilityRole::MenuItemCheckbox | AccessibilityRole::MenuItemRadio
-            | AccessibilityRole::Tab | AccessibilityRole::TreeItem
-            | AccessibilityRole::ListItem | AccessibilityRole::Option)
-    {
-        return Err(ValidationError::InvalidAccessibilityState);
-    }
-    if states.has_popup.is_some()
-        && !matches!(role, AccessibilityRole::Button | AccessibilityRole::Link
-            | AccessibilityRole::Combobox | AccessibilityRole::MenuItem
-            | AccessibilityRole::MenuItemCheckbox | AccessibilityRole::MenuItemRadio)
+        && !matches!(
+            role,
+            AccessibilityRole::Grid
+                | AccessibilityRole::ListBox
+                | AccessibilityRole::Tree
+                | AccessibilityRole::TreeGrid
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if states.orientation.is_some()
-        && !matches!(role, AccessibilityRole::Menu | AccessibilityRole::MenuBar
-            | AccessibilityRole::ListBox | AccessibilityRole::TabList
-            | AccessibilityRole::Toolbar | AccessibilityRole::Tree
-            | AccessibilityRole::TreeGrid | AccessibilityRole::Grid
-            | AccessibilityRole::Slider | AccessibilityRole::Separator
-            | AccessibilityRole::RadioGroup)
+        && !matches!(
+            role,
+            AccessibilityRole::Menu
+                | AccessibilityRole::MenuBar
+                | AccessibilityRole::ListBox
+                | AccessibilityRole::RadioGroup
+                | AccessibilityRole::Scrollbar
+                | AccessibilityRole::Slider
+                | AccessibilityRole::Separator
+                | AccessibilityRole::TabList
+                | AccessibilityRole::Toolbar
+                | AccessibilityRole::Tree
+                | AccessibilityRole::TreeGrid
+                | AccessibilityRole::Grid
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if states.level.is_some()
-        && !matches!(role, AccessibilityRole::Heading | AccessibilityRole::TreeItem
-            | AccessibilityRole::ListItem | AccessibilityRole::Row)
+        && !matches!(
+            role,
+            AccessibilityRole::Heading
+                | AccessibilityRole::ListItem
+                | AccessibilityRole::Row
+                | AccessibilityRole::TreeItem
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
     if (states.position_in_set.is_some() || states.set_size.is_some())
-        && !matches!(role, AccessibilityRole::ListItem | AccessibilityRole::Option
-            | AccessibilityRole::Radio | AccessibilityRole::Tab
-            | AccessibilityRole::TreeItem | AccessibilityRole::MenuItem
-            | AccessibilityRole::MenuItemCheckbox | AccessibilityRole::MenuItemRadio)
+        && !matches!(
+            role,
+            AccessibilityRole::Article
+                | AccessibilityRole::ListItem
+                | AccessibilityRole::MenuItem
+                | AccessibilityRole::Option
+                | AccessibilityRole::Radio
+                | AccessibilityRole::Row
+                | AccessibilityRole::Tab
+                | AccessibilityRole::MenuItemCheckbox
+                | AccessibilityRole::MenuItemRadio
+                | AccessibilityRole::TreeItem
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
@@ -416,13 +626,27 @@ fn validate_accessibility(
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
-
-    if states.level == Some(0) || states.position_in_set == Some(0) || states.set_size == Some(0) {
+    if states.autocomplete.is_some()
+        && !matches!(
+            role,
+            AccessibilityRole::Combobox
+                | AccessibilityRole::Textbox
+                | AccessibilityRole::Searchbox
+        )
+    {
         return Err(ValidationError::InvalidAccessibilityState);
     }
+
+    if states.level == Some(0)
+        || states.position_in_set == Some(0)
+        || states.set_size == Some(0)
+        || states.set_size.is_some_and(|size| size < -1)
+    {
+        return Err(ValidationError::InvalidAccessibilityRange);
+    }
     if let (Some(position), Some(size)) = (states.position_in_set, states.set_size) {
-        if position > size {
-            return Err(ValidationError::InvalidAccessibilityState);
+        if size > 0 && position > size as u32 {
+            return Err(ValidationError::InvalidAccessibilityRange);
         }
     }
 
@@ -432,11 +656,17 @@ fn validate_accessibility(
     }
     let has_range_value = states.value_min.is_some()
         || states.value_max.is_some()
-        || states.value_now.is_some();
+        || states.value_now.is_some()
+        || states.value_text.is_some();
     if has_range_value
-        && !matches!(role, AccessibilityRole::Slider | AccessibilityRole::SpinButton
-            | AccessibilityRole::ProgressBar | AccessibilityRole::Meter
-            | AccessibilityRole::Scrollbar)
+        && !matches!(
+            role,
+            AccessibilityRole::Slider
+                | AccessibilityRole::SpinButton
+                | AccessibilityRole::ProgressBar
+                | AccessibilityRole::Meter
+                | AccessibilityRole::Scrollbar
+        )
     {
         return Err(ValidationError::InvalidAccessibilityState);
     }
@@ -453,21 +683,56 @@ fn validate_accessibility(
         }
     }
 
+    if states.row_count.is_some_and(|count| count < -1)
+        || states.column_count.is_some_and(|count| count < -1)
+        || states.row_index == Some(0)
+        || states.column_index == Some(0)
+        || states.row_span == Some(0)
+        || states.column_span == Some(0)
+    {
+        return Err(ValidationError::InvalidAccessibilityRange);
+    }
+    if let (Some(count), Some(index)) = (states.row_count, states.row_index) {
+        if count >= 0 && index > count as u32 {
+            return Err(ValidationError::InvalidAccessibilityRange);
+        }
+    }
+    if let (Some(count), Some(index)) = (states.column_count, states.column_index) {
+        if count >= 0 && index > count as u32 {
+            return Err(ValidationError::InvalidAccessibilityRange);
+        }
+    }
+    if let (Some(index), Some(span), Some(count)) =
+        (states.row_index, states.row_span, states.row_count)
+    {
+        if count >= 0 && index.saturating_add(span - 1) > count as u32 {
+            return Err(ValidationError::InvalidAccessibilityRange);
+        }
+    }
+    if let (Some(index), Some(span), Some(count)) =
+        (states.column_index, states.column_span, states.column_count)
+    {
+        if count >= 0 && index.saturating_add(span - 1) > count as u32 {
+            return Err(ValidationError::InvalidAccessibilityRange);
+        }
+    }
+
+    if let Some(live_region) = &accessibility.live_region {
+        if live_region.relevant.contains(&LiveRelevant::All) && live_region.relevant.len() > 1 {
+            return Err(ValidationError::InvalidLiveRegionConfiguration);
+        }
+    }
+
     Ok(())
 }
 
 fn validate_reference_list(
-    owner_id: u64,
     references: &[u64],
     known_ids: &HashSet<u64>,
 ) -> Result<(), ValidationError> {
-    let mut unique = HashSet::new();
     for reference in references {
         if *reference == 0 {
             return Err(ValidationError::ZeroNodeId);
-        }
-        if *reference == owner_id || !unique.insert(*reference) {
-            return Err(ValidationError::DuplicateAccessibilityReference(*reference));
         }
         if !known_ids.contains(reference) {
             return Err(ValidationError::UnknownAccessibilityReference(*reference));
@@ -476,56 +741,131 @@ fn validate_reference_list(
     Ok(())
 }
 
-fn validate_accessibility_relationships(
-    root: &Node,
-    known_ids: &HashSet<u64>,
-) -> Result<(), ValidationError> {
-    let mut owns_graph = HashMap::new();
-    let mut owners = HashMap::new();
-    collect_accessibility_relationships(root, known_ids, &mut owns_graph, &mut owners)?;
-
-    if let Some(node_id) = find_ownership_cycle(&owns_graph) {
-        return Err(ValidationError::AccessibilityOwnershipCycle(node_id));
+fn collect_tree_edges(
+    node: &Node,
+    graph: &mut HashMap<u64, Vec<u64>>,
+    parent_by_id: &mut HashMap<u64, u64>,
+) {
+    graph.entry(node.id).or_default();
+    for child in &node.children {
+        graph.entry(node.id).or_default().push(child.id);
+        parent_by_id.insert(child.id, node.id);
+        collect_tree_edges(child, graph, parent_by_id);
     }
-    Ok(())
 }
 
 fn collect_accessibility_relationships(
     node: &Node,
     known_ids: &HashSet<u64>,
-    owns_graph: &mut HashMap<u64, Vec<u64>>,
     owners: &mut HashMap<u64, u64>,
+    active_descendants: &mut HashMap<u64, u64>,
 ) -> Result<(), ValidationError> {
     let relationships = &node.accessibility.relationships;
-    validate_reference_list(node.id, &relationships.labelled_by, known_ids)?;
-    validate_reference_list(node.id, &relationships.described_by, known_ids)?;
-    validate_reference_list(node.id, &relationships.controls, known_ids)?;
-    validate_reference_list(node.id, &relationships.owns, known_ids)?;
-    validate_reference_list(node.id, &relationships.details, known_ids)?;
-    validate_reference_list(node.id, &relationships.flow_to, known_ids)?;
-    validate_reference_list(node.id, &relationships.headers, known_ids)?;
+    validate_reference_list(&relationships.labelled_by, known_ids)?;
+    validate_reference_list(&relationships.described_by, known_ids)?;
+    validate_reference_list(&relationships.controls, known_ids)?;
+    validate_reference_list(&relationships.owns, known_ids)?;
+    validate_reference_list(&relationships.details, known_ids)?;
+    validate_reference_list(&relationships.flow_to, known_ids)?;
+    validate_reference_list(&relationships.headers, known_ids)?;
 
     for reference in [relationships.active_descendant, relationships.error_message]
         .into_iter()
         .flatten()
     {
-        validate_reference_list(node.id, &[reference], known_ids)?;
+        if reference == 0 {
+            return Err(ValidationError::ZeroNodeId);
+        }
+        if !known_ids.contains(&reference) {
+            return Err(ValidationError::UnknownAccessibilityReference(reference));
+        }
     }
 
-    if !relationships.owns.is_empty() {
-        owns_graph.insert(node.id, relationships.owns.clone());
+    if let Some(active_descendant) = relationships.active_descendant {
+        active_descendants.insert(node.id, active_descendant);
     }
-    for child_id in &relationships.owns {
-        if let Some(previous_owner) = owners.insert(*child_id, node.id) {
+
+    for owned_id in &relationships.owns {
+        if let Some(previous_owner) = owners.insert(*owned_id, node.id) {
             if previous_owner != node.id {
-                return Err(ValidationError::MultipleAccessibilityOwners(*child_id));
+                return Err(ValidationError::MultipleAccessibilityOwners(*owned_id));
             }
         }
     }
 
     for child in &node.children {
-        collect_accessibility_relationships(child, known_ids, owns_graph, owners)?;
+        collect_accessibility_relationships(child, known_ids, owners, active_descendants)?;
     }
+    Ok(())
+}
+
+fn is_accessibility_descendant(
+    graph: &HashMap<u64, Vec<u64>>,
+    ancestor_id: u64,
+    target_id: u64,
+) -> bool {
+    let mut visited = HashSet::new();
+    let mut pending = vec![ancestor_id];
+
+    while let Some(node_id) = pending.pop() {
+        if !visited.insert(node_id) {
+            continue;
+        }
+        if let Some(children) = graph.get(&node_id) {
+            for child_id in children {
+                if *child_id == target_id {
+                    return true;
+                }
+                pending.push(*child_id);
+            }
+        }
+    }
+    false
+}
+
+fn validate_accessibility_relationships(
+    root: &Node,
+    known_ids: &HashSet<u64>,
+) -> Result<(), ValidationError> {
+    let mut graph = HashMap::new();
+    let mut parent_by_id = HashMap::new();
+    let mut owners = HashMap::new();
+    let mut active_descendants = HashMap::new();
+
+    collect_tree_edges(root, &mut graph, &mut parent_by_id);
+    collect_accessibility_relationships(
+        root,
+        known_ids,
+        &mut owners,
+        &mut active_descendants,
+    )?;
+
+    // aria-owns changes the accessibility parent. Remove a prior tree edge
+    // when the owner is not already the node's tree parent.
+    for (owned_id, owner_id) in owners {
+        if let Some(previous_parent) = parent_by_id.get(&owned_id) {
+            if *previous_parent != owner_id {
+                if let Some(children) = graph.get_mut(previous_parent) {
+                    children.retain(|child_id| *child_id != owned_id);
+                }
+            }
+        }
+        let children = graph.entry(owner_id).or_default();
+        if !children.contains(&owned_id) {
+            children.push(owned_id);
+        }
+    }
+
+    if let Some(node_id) = find_ownership_cycle(&graph) {
+        return Err(ValidationError::AccessibilityOwnershipCycle(node_id));
+    }
+
+    for (owner_id, active_descendant_id) in active_descendants {
+        if !is_accessibility_descendant(&graph, owner_id, active_descendant_id) {
+            return Err(ValidationError::InvalidActiveDescendant(active_descendant_id));
+        }
+    }
+
     Ok(())
 }
 
@@ -651,20 +991,59 @@ mod tests {
     }
 
     #[test]
-    fn accessibility_relationship_lists_reject_duplicates_and_self_references() {
-        let mut duplicate = sample_tree();
-        duplicate.accessibility.relationships.labelled_by = vec![2, 2];
+    fn accessibility_reference_lists_allow_repetition_and_require_resolved_ids() {
+        let mut repeated = sample_tree();
+        repeated.accessibility.relationships.labelled_by = vec![2, 2];
+        assert!(validate_snapshot(&Snapshot { version: 1, root: repeated }).is_ok());
+    }
+
+    #[test]
+    fn accessibility_owns_reparents_descendants_and_detects_tree_cycles() {
+        let mut root = sample_tree();
+        root.accessibility.relationships.owns = vec![2];
+        assert!(validate_snapshot(&Snapshot { version: 1, root: root.clone() }).is_ok());
+
+        root.children[0].accessibility.relationships.owns = vec![1];
+        assert!(matches!(
+            validate_snapshot(&Snapshot { version: 1, root }),
+            Err(ValidationError::AccessibilityOwnershipCycle(_))
+        ));
+    }
+
+    #[test]
+    fn active_descendant_must_be_owned_or_a_tree_descendant() {
+        let mut root = sample_tree();
+        root.children[1].accessibility.relationships.active_descendant = Some(2);
+        assert!(validate_snapshot(&Snapshot { version: 1, root: root.clone() }).is_ok());
+
+        root.children[1].accessibility.relationships.active_descendant = Some(1);
         assert_eq!(
-            validate_snapshot(&Snapshot { version: 1, root: duplicate }),
-            Err(ValidationError::DuplicateAccessibilityReference(2))
+            validate_snapshot(&Snapshot { version: 1, root }),
+            Err(ValidationError::InvalidActiveDescendant(1))
+        );
+    }
+
+    #[test]
+    fn global_accessibility_states_are_not_overrestricted_by_role() {
+        let mut root = sample_tree();
+        root.accessibility.states.current = Some(CurrentState::Page);
+        root.accessibility.states.busy = true;
+        assert!(validate_snapshot(&Snapshot { version: 1, root }).is_ok());
+    }
+
+    #[test]
+    fn typed_role_catalog_and_name_prohibitions_are_explicit() {
+        let mut decorative = Node::new(1, NodeKind::Box);
+        decorative.accessibility.role = Some(AccessibilityRole::Presentation);
+        decorative.accessibility.name = Some("Decorative".into());
+        assert_eq!(
+            validate_snapshot(&Snapshot { version: 1, root: decorative }),
+            Err(ValidationError::NameProhibitedForRole)
         );
 
-        let mut self_reference = sample_tree();
-        self_reference.accessibility.relationships.described_by = vec![1];
-        assert_eq!(
-            validate_snapshot(&Snapshot { version: 1, root: self_reference }),
-            Err(ValidationError::DuplicateAccessibilityReference(1))
-        );
+        let mut math = Node::new(1, NodeKind::Text);
+        math.accessibility.role = Some(AccessibilityRole::Math);
+        assert!(validate_snapshot(&Snapshot { version: 1, root: math }).is_ok());
     }
 
     #[test]
