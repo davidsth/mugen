@@ -437,10 +437,7 @@ fn validate_accessibility(
     if accessibility.name.as_ref().is_some_and(|name| name.trim().is_empty()) {
         return Err(ValidationError::EmptyAccessibilityName);
     }
-    if (accessibility.name.is_some()
-        || !accessibility.relationships.labelled_by.is_empty())
-        && role_prohibits_name(role)
-    {
+    if accessibility.name.is_some() && role_prohibits_name(role) {
         return Err(ValidationError::NameProhibitedForRole);
     }
     if accessibility
@@ -798,6 +795,13 @@ fn collect_accessibility_relationships(
 ) -> Result<(), ValidationError> {
     let relationships = &node.accessibility.relationships;
     validate_reference_list(&relationships.labelled_by, known_ids)?;
+    let effective_role = node
+        .accessibility
+        .role
+        .unwrap_or_else(|| implicit_accessibility_role(node.kind));
+    if !relationships.labelled_by.is_empty() && role_prohibits_name(effective_role) {
+        return Err(ValidationError::NameProhibitedForRole);
+    }
     validate_reference_list(&relationships.described_by, known_ids)?;
     validate_reference_list(&relationships.controls, known_ids)?;
     validate_reference_list(&relationships.owns, known_ids)?;
@@ -1029,6 +1033,7 @@ mod tests {
     #[test]
     fn accessibility_reference_lists_allow_repetition_and_require_resolved_ids() {
         let mut repeated = sample_tree();
+        repeated.accessibility.role = Some(AccessibilityRole::Button);
         repeated.accessibility.relationships.labelled_by = vec![2, 2];
         assert!(validate_snapshot(&Snapshot { version: 1, root: repeated }).is_ok());
     }
