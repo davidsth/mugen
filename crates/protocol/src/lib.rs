@@ -437,7 +437,10 @@ fn validate_accessibility(
     if accessibility.name.as_ref().is_some_and(|name| name.trim().is_empty()) {
         return Err(ValidationError::EmptyAccessibilityName);
     }
-    if accessibility.name.is_some() && role_prohibits_name(role) {
+    if (accessibility.name.is_some()
+        || !accessibility.relationships.labelled_by.is_empty())
+        && role_prohibits_name(role)
+    {
         return Err(ValidationError::NameProhibitedForRole);
     }
     if accessibility
@@ -448,6 +451,17 @@ fn validate_accessibility(
         return Err(ValidationError::EmptyAccessibilityRoleDescription);
     }
 
+    if matches!(
+        role,
+        AccessibilityRole::Checkbox
+            | AccessibilityRole::Radio
+            | AccessibilityRole::Switch
+            | AccessibilityRole::MenuItemCheckbox
+            | AccessibilityRole::MenuItemRadio
+    ) && states.checked.is_none()
+    {
+        return Err(ValidationError::InvalidAccessibilityState);
+    }
     if states.checked.is_some()
         && !matches!(
             role,
@@ -505,6 +519,28 @@ fn validate_accessibility(
                 | AccessibilityRole::MenuItemCheckbox
                 | AccessibilityRole::MenuItemRadio
                 | AccessibilityRole::Switch
+        )
+    {
+        return Err(ValidationError::InvalidAccessibilityState);
+    }
+    if states.has_popup.is_some()
+        && !matches!(
+            role,
+            AccessibilityRole::Application
+                | AccessibilityRole::Button
+                | AccessibilityRole::Combobox
+                | AccessibilityRole::GridCell
+                | AccessibilityRole::Link
+                | AccessibilityRole::MenuItem
+                | AccessibilityRole::Slider
+                | AccessibilityRole::Tab
+                | AccessibilityRole::Textbox
+                | AccessibilityRole::TreeItem
+                | AccessibilityRole::ColumnHeader
+                | AccessibilityRole::MenuItemCheckbox
+                | AccessibilityRole::MenuItemRadio
+                | AccessibilityRole::RowHeader
+                | AccessibilityRole::Searchbox
         )
     {
         return Err(ValidationError::InvalidAccessibilityState);
@@ -1000,10 +1036,10 @@ mod tests {
     #[test]
     fn accessibility_owns_reparents_descendants_and_detects_tree_cycles() {
         let mut root = sample_tree();
-        root.accessibility.relationships.owns = vec![2];
+        root.children[1].accessibility.relationships.owns = vec![2];
         assert!(validate_snapshot(&Snapshot { version: 1, root: root.clone() }).is_ok());
 
-        root.children[0].accessibility.relationships.owns = vec![1];
+        root.children[0].accessibility.relationships.owns = vec![3];
         assert!(matches!(
             validate_snapshot(&Snapshot { version: 1, root }),
             Err(ValidationError::AccessibilityOwnershipCycle(_))
@@ -1013,10 +1049,12 @@ mod tests {
     #[test]
     fn active_descendant_must_be_owned_or_a_tree_descendant() {
         let mut root = sample_tree();
-        root.children[1].accessibility.relationships.active_descendant = Some(2);
+        root.accessibility.role = Some(AccessibilityRole::ListBox);
+        root.children[0].accessibility.role = Some(AccessibilityRole::Option);
+        root.accessibility.relationships.active_descendant = Some(2);
         assert!(validate_snapshot(&Snapshot { version: 1, root: root.clone() }).is_ok());
 
-        root.children[1].accessibility.relationships.active_descendant = Some(1);
+        root.accessibility.relationships.active_descendant = Some(1);
         assert_eq!(
             validate_snapshot(&Snapshot { version: 1, root }),
             Err(ValidationError::InvalidActiveDescendant(1))
@@ -1078,6 +1116,18 @@ mod tests {
         let mut button = Node::new(7, NodeKind::Button);
         button.accessibility.states.pressed = Some(PressedState::Mixed);
         assert!(validate_snapshot(&Snapshot { version: 1, root: button }).is_ok());
+
+        let mut option = Node::new(8, NodeKind::Text);
+        option.accessibility.role = Some(AccessibilityRole::Option);
+        option.accessibility.states.checked = Some(CheckedState::True);
+        assert!(validate_snapshot(&Snapshot { version: 1, root: option }).is_ok());
+
+        let mut checkbox = Node::new(9, NodeKind::Input);
+        checkbox.accessibility.role = Some(AccessibilityRole::Checkbox);
+        assert_eq!(
+            validate_snapshot(&Snapshot { version: 1, root: checkbox }),
+            Err(ValidationError::InvalidAccessibilityState)
+        );
     }
 
     #[test]
