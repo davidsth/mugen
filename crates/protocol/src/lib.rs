@@ -261,4 +261,40 @@ mod tests {
             value: EventValue::Text("x".repeat(MAX_EVENT_TEXT_LEN + 1)) };
         assert_eq!(validate_event(&event), Err(ValidationError::EventTextTooLong));
     }
+    #[test] fn invalid_layout_numbers_are_rejected() {
+        let mut root = sample_tree();
+        root.layout.gap = -1.0;
+        assert_eq!(validate_snapshot(&Snapshot { version: 1, root }), Err(ValidationError::InvalidNumber));
+
+        let mut root = sample_tree();
+        root.layout.width = Length::Percent(101.0);
+        assert_eq!(validate_snapshot(&Snapshot { version: 1, root }), Err(ValidationError::InvalidNumber));
+    }
+
+    #[test] fn invalid_style_numbers_are_rejected() {
+        let mut root = sample_tree();
+        root.style.opacity = f32::NAN;
+        assert_eq!(validate_snapshot(&Snapshot { version: 1, root }), Err(ValidationError::InvalidNumber));
+    }
+
+    #[test] fn handler_name_length_is_bounded() {
+        let mut root = sample_tree();
+        root.children[1].events[0].handler = "a".repeat(MAX_HANDLER_NAME_LEN + 1);
+        assert_eq!(validate_snapshot(&Snapshot { version: 1, root }), Err(ValidationError::InvalidHandler));
+    }
+
+    #[test] fn patch_conflicting_operations_are_rejected() {
+        let patch = Patch {
+            base_version: 1, version: 2,
+            upserts: vec![], deletes: vec![9, 9], moves: vec![],
+        };
+        assert_eq!(validate_patch(&patch), Err(ValidationError::DuplicateOperation(9)));
+    }
+
+    #[test] fn zero_event_ids_are_rejected() {
+        let event = Event { event_id: 0, tree_version: 1, node_id: 2, kind: EventKind::Click,
+            value: EventValue::None };
+        assert_eq!(validate_event(&event), Err(ValidationError::ZeroNodeId));
+    }
+
 }
