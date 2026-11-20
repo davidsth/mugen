@@ -32,7 +32,8 @@ User input is handled locally for immediate feedback, then sent as a typed event
 | --- | --- |
 | Rust workspace and desktop shell | Initial implementation |
 | Typed protocol v1 and validation | Draft implemented |
-| Layout and renderer | Groundwork |
+| Typed layout engine | Initial Row/Column/Stack pass; Grid and sizing remain incomplete ([details](docs/layout-engine.md)) |
+| Renderer | Placeholder; not yet connected to layout |
 | WebSocket app connection | Not implemented |
 | Live native UI rendering | Not implemented |
 | Crystal SDK | Specification only |
@@ -53,6 +54,7 @@ mugen/
 │   ├── images/     # Architecture diagrams
 │   ├── protocol-v1.md
 │   ├── interaction-model.md
+│   ├── layout-engine.md
 │   └── crystal-sdk.md
 ├── Cargo.toml
 └── README.md
