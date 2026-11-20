@@ -102,7 +102,7 @@ fn place(node: &Node, rect: Rect, out: &mut Vec<LaidOut>) {
     };
     let gap = node.layout.gap;
     let measured: Vec<Size> = node.children.iter().map(|c| measure(c, Size { width: content.width, height: content.height })).collect();
-    let main_axis = match node.layout.kind { LayoutKind::Row => Axis::Horizontal, LayoutKind::Column => Axis::Vertical, _ => node.layout.axis };
+    if node.layout.kind == LayoutKind::Stack {\n        for child in &node.children {\n            let size = resolve_size(child, Size { width: content.width, height: content.height }, measure(child, Size { width: content.width, height: content.height }));\n            let width = if child.layout.width == Length::Fill || node.layout.align == Align::Stretch { content.width } else { size.width.min(content.width) };\n            let height = if child.layout.height == Length::Fill || node.layout.align == Align::Stretch { content.height } else { size.height.min(content.height) };\n            let x = match node.layout.align { Align::Center => content.x + (content.width-width)/2.0, Align::End => content.x+content.width-width, _ => content.x };\n            let y = match node.layout.align { Align::Center => content.y + (content.height-height)/2.0, Align::End => content.y+content.height-height, _ => content.y };\n            place(child, Rect { x, y, width, height }, out);\n        }\n        return;\n    }\n    let main_axis = match node.layout.kind { LayoutKind::Row => Axis::Horizontal, LayoutKind::Column => Axis::Vertical, LayoutKind::Grid => Axis::Horizontal, _ => node.layout.axis };
     let main_available = if main_axis == Axis::Horizontal { content.width } else { content.height };
     let base_sum = measured.iter().map(|s| if main_axis == Axis::Horizontal { s.width } else { s.height }).sum::<f32>() + gap * node.children.len().saturating_sub(1) as f32;
     let free = (main_available - base_sum).max(0.0);
@@ -140,4 +140,49 @@ fn place(node: &Node, rect: Rect, out: &mut Vec<LaidOut>) {
         place(child, Rect { x, y, width, height }, out);
         cursor += main_size + gap + extra_gap;
     }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mugen_protocol::{Layout, Insets};
+
+    fn node(id: u64, kind: LayoutKind, children: Vec<Node>) -> Node {
+        let mut n = Node::new(id, NodeKind::Box);
+        n.layout = Layout { kind, axis: Axis::Vertical, align: Align::Start, justify: Justify::Start,
+            gap: 0.0, padding: Insets::ZERO, width: Length::Auto, height: Length::Auto,
+            min_width: None, min_height: None, max_width: None, max_height: None, grow: 0.0, shrink: 1.0 };
+        n.children = children;
+        n
+    }
+    fn get(items: &[LaidOut], id: u64) -> LaidOut { *items.iter().find(|x| x.node_id == id).unwrap() }
+
+    #[test] fn row_places_children_sequentially() {
+        let root = node(1, LayoutKind::Row, vec![Node::text(2,"ab"), Node::text(3,"abc")]);
+        let result = layout(&root, 100.0, 40.0);
+        assert_eq!(get(&result,2).x, 0.0);
+        assert_eq!(get(&result,2).width, 16.0);
+        assert_eq!(get(&result,3).x, 16.0);
+    }
+    #[test] fn column_respects_gap_and_padding() {
+        let mut root = node(1, LayoutKind::Column, vec![Node::text(2,"a"),Node::text(3,"b")]);
+        root.layout.gap=5.0;
+        root.layout.padding=Insets{top:3.0,right:0.0,bottom:0.0,left:4.0};
+        let result=layout(&root,100.0,100.0);
+        assert_eq!(get(&result,2).x,4.0);
+        assert_eq!(get(&result,2).y,3.0);
+        assert_eq!(get(&result,3).y,28.0);
+    }
+    #[test] fn stack_overlays_children() {
+        let root=node(1,LayoutKind::Stack,vec![Node::text(2,"a"),Node::text(3,"b")]);
+        let result=layout(&root,100.0,40.0);
+        assert_eq!(get(&result,2).x,get(&result,3).x);
+        assert_eq!(get(&result,2).y,get(&result,3).y);
+    }
+    #[test] fn invalid_viewport_is_sanitized() {
+        let root=Node::new(1,NodeKind::Box);
+        let result=layout(&root,f32::NAN,-10.0);
+        assert_eq!(result[0].width,0.0);
+        assert_eq!(result[0].height,0.0);
+    }
+}
+
 }
