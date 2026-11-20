@@ -112,7 +112,7 @@ pub enum ClientMessage {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum ServerMessage {
-    Welcome { protocol_version: u32, app_name: String }, Snapshot(Snapshot), Patch(Patch),
+    Welcome { protocol_version: u32, app_name: String }, Snapshot(Box<Snapshot>), Patch(Patch),
     EventError { event_id: u64, code: EventErrorCode, message: String },
     Ping { nonce: u64 }, Pong { nonce: u64 },
 }
