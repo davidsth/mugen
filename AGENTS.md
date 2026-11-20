@@ -89,16 +89,16 @@ over WebSocket is not yet.
 User
   │
   ▼
-browser/crates/shell     winit + softbuffer window (v0.1),
+crates/shell     winit + softbuffer window (v0.1),
                          joined-app list, click-to-switch,
                          --app IP:port parsing
-  │  (Step 3: wgpu renderer + typed layout replace softbuffer)
+  │  (initial layout engine exists; renderer integration is still pending)
   ▼
-browser/crates/layout    typed constraint layout (Row/Column/Stack/Grid)
+crates/layout            initial typed layout pass (Row/Column/Stack; Grid is incomplete)
   ▼
-browser/crates/renderer  wgpu display list, atlas, culling (Step 3)
+crates/renderer  wgpu display list, atlas, culling (Step 3)
   ▼
-browser/crates/protocol  Snapshot / Patch / Event, validation
+crates/protocol  Snapshot / Patch / Event, validation
   │
   ══ WebSocket ══  (Step 5: shell actually connects and renders)
   │
@@ -159,7 +159,7 @@ version bump and a reason in the PR description):
   and platform accessibility APIs; WAI-ARIA/APG alignment is mandatory.
 
 Validation, hard, in Rust, before layout (see
-`browser/crates/protocol/src/lib.rs`):
+`crates/protocol/src/lib.rs`):
 max tree depth, max node count, max text length, max image size,
 no duplicate node IDs. An app must never be able to DoS or crash
 the renderer. Reject, log, and keep the shell alive.
@@ -173,15 +173,13 @@ brew install rustup
 rustup toolchain install stable
 ```
 
-Browser (Rust workspace lives under `browser/` — run cargo from there,
-not from the repo root):
+Browser (Rust workspace is at the repository root):
 ```sh
-cd browser
-cargo test -p mugen-protocol
+cargo test --workspace --locked
 cargo run -p mugen-shell
 cargo run -p mugen-shell -- --app 127.0.0.1:4000
-cargo fmt --check
-cargo clippy --workspace -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --locked -- -D warnings
 ```
 
 Demo app (separate repo — Crystal, stdlib only, no external shards):
@@ -191,9 +189,10 @@ crystal run src/server.cr
 # or: crystal build src/server.cr -o demo-app && ./demo-app
 ```
 
-CI for this repo runs on macOS, Rust only:
-`cargo test -p mugen-protocol --manifest-path browser/Cargo.toml`
-and `cargo check --workspace --manifest-path browser/Cargo.toml`.
+CI for this repo runs on `ubuntu-latest` and checks the Rust workspace.
+`cargo fmt --all -- --check` is currently non-blocking (`continue-on-error`),
+while `cargo test --workspace --locked` and
+`cargo clippy --workspace --all-targets --locked -- -D warnings` are blocking.
 There is no Crystal job in this repo — Crystal lives in app repos,
 each with their own CI if they want one.
 
@@ -267,8 +266,14 @@ unless it is a general node/capability with a protocol version.
 
 - v0.1 browser: real winit + softbuffer window, joined-app sidebar,
   click-to-switch, local-app registration via `--app` / env var.
-  Protocol crate is real and tested. Layout/renderer are placeholders
-  for Step 3 (wgpu), not yet wired into the shell.
+  The protocol crate contains typed v1 models and boundary validation.
+  `mugen-layout` now provides a deterministic initial Row/Column/Stack
+  layout pass with typed lengths, gaps, padding, alignment, basic grow/
+  justify, and regression tests. Grid still falls back to horizontal
+  flow; shrink, overflow, scroll-aware layout, renderer-backed text
+  metrics, and caching remain unimplemented. Layout output is not wired
+  into the shell. `mugen-renderer` remains a placeholder; wgpu painting
+  and the AccessKit bridge are not implemented.
 - The shell does NOT yet fetch/render a Snapshot over WebSocket.
   A local app's pane is a placeholder layout in v0.1. The next step
   (Step 5) is to connect `ws://<ip:port>/ws` and render the Snapshot.
