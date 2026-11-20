@@ -102,7 +102,18 @@ fn place(node: &Node, rect: Rect, out: &mut Vec<LaidOut>) {
     };
     let gap = node.layout.gap;
     let measured: Vec<Size> = node.children.iter().map(|c| measure(c, Size { width: content.width, height: content.height })).collect();
-    if node.layout.kind == LayoutKind::Stack {\n        for child in &node.children {\n            let size = resolve_size(child, Size { width: content.width, height: content.height }, measure(child, Size { width: content.width, height: content.height }));\n            let width = if child.layout.width == Length::Fill || node.layout.align == Align::Stretch { content.width } else { size.width.min(content.width) };\n            let height = if child.layout.height == Length::Fill || node.layout.align == Align::Stretch { content.height } else { size.height.min(content.height) };\n            let x = match node.layout.align { Align::Center => content.x + (content.width-width)/2.0, Align::End => content.x+content.width-width, _ => content.x };\n            let y = match node.layout.align { Align::Center => content.y + (content.height-height)/2.0, Align::End => content.y+content.height-height, _ => content.y };\n            place(child, Rect { x, y, width, height }, out);\n        }\n        return;\n    }\n    let main_axis = match node.layout.kind { LayoutKind::Row => Axis::Horizontal, LayoutKind::Column => Axis::Vertical, LayoutKind::Grid => Axis::Horizontal, _ => node.layout.axis };
+    if node.layout.kind == LayoutKind::Stack {
+        for child in &node.children {
+            let size = resolve_size(child, Size { width: content.width, height: content.height }, measure(child, Size { width: content.width, height: content.height }));
+            let width = if child.layout.width == Length::Fill || node.layout.align == Align::Stretch { content.width } else { size.width.min(content.width) };
+            let height = if child.layout.height == Length::Fill || node.layout.align == Align::Stretch { content.height } else { size.height.min(content.height) };
+            let x = match node.layout.align { Align::Center => content.x + (content.width-width)/2.0, Align::End => content.x+content.width-width, _ => content.x };
+            let y = match node.layout.align { Align::Center => content.y + (content.height-height)/2.0, Align::End => content.y+content.height-height, _ => content.y };
+            place(child, Rect { x, y, width, height }, out);
+        }
+        return;
+    }
+    let main_axis = match node.layout.kind { LayoutKind::Row => Axis::Horizontal, LayoutKind::Column => Axis::Vertical, LayoutKind::Grid => Axis::Horizontal, _ => node.layout.axis };
     let main_available = if main_axis == Axis::Horizontal { content.width } else { content.height };
     let base_sum = measured.iter().map(|s| if main_axis == Axis::Horizontal { s.width } else { s.height }).sum::<f32>() + gap * node.children.len().saturating_sub(1) as f32;
     let free = (main_available - base_sum).max(0.0);
@@ -140,6 +151,8 @@ fn place(node: &Node, rect: Rect, out: &mut Vec<LaidOut>) {
         place(child, Rect { x, y, width, height }, out);
         cursor += main_size + gap + extra_gap;
     }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -185,4 +198,3 @@ mod tests {
     }
 }
 
-}
