@@ -640,16 +640,11 @@ version = "0.1.0"
 [[package]]
 name = "mugen-renderer"
 version = "0.1.0"
-dependencies = [
- "mugen-layout",
- "mugen-protocol",
-]
 
 [[package]]
 name = "mugen-shell"
 version = "0.1.0"
 dependencies = [
- "mugen-protocol",
  "softbuffer",
  "winit",
 ]
