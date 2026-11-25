@@ -10,7 +10,6 @@ name = "mugen"
 path = "src/main.rs"
 
 [dependencies]
-mugen-protocol = { path = "../protocol" }
 winit = "0.30"
 softbuffer = "0.4"
 
