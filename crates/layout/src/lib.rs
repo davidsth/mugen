@@ -132,7 +132,7 @@ fn place(node: &Node, rect: Rect, out: &mut Vec<LaidOut>) {
     let mut cursor = if node.layout.justify == Justify::SpaceAround { extra_gap / 2.0 } else { justify_offset };
     for (i, child) in node.children.iter().enumerate() {
         let child_intrinsic = measured[i];
-        let mut child_available = Size { width: content.width, height: content.height };
+        let child_available = Size { width: content.width, height: content.height };
         let child_size = resolve_size(child, child_available, child_intrinsic);
         let grow_extra = if grow_sum > 0.0 { free * child.layout.grow / grow_sum } else { 0.0 };
         let main_size = (if main_axis == Axis::Horizontal { child_size.width } else { child_size.height }) + grow_extra;
