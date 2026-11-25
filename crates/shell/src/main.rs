@@ -170,7 +170,6 @@ impl App {
         let mut buffer = surface.buffer_mut().unwrap();
         let w = buffer.width().get() as usize;
         let h = buffer.height().get() as usize;
-        let mut frame = Frame { pixels: &mut *buffer, width: w, height: h };
         let scale = window.scale_factor();
         let s = |v: f32| (v * scale as f32) as usize;
 
@@ -179,6 +178,7 @@ impl App {
         for px in buffer.iter_mut() {
             *px = bg;
         }
+        let mut frame = Frame { pixels: &mut *buffer, width: w, height: h };
         frame.fill_rect(0, 0, sidebar_w, h, rgb(0x11, 0x18, 0x27));
 
         let icon = s(48.0);
