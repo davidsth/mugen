@@ -6,8 +6,6 @@ license.workspace = true
 description = "Mugen renderer (Step 3 placeholder)."
 
 [dependencies]
-mugen-protocol = { path = "../protocol" }
-mugen-layout = { path = "../layout" }
 
 # Add in Step 3 (macOS: Metal backend via wgpu, Xcode command-line tools required):
 # wgpu = "26"
