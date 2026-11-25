@@ -55,21 +55,20 @@ fn rgb(r: u32, g: u32, b: u32) -> u32 {
     (r << 16) | (g << 8) | b
 }
 
-fn fill_rect(
-    buffer: &mut [u32],
-    buf_w: usize,
-    buf_h: usize,
-    x: usize,
-    y: usize,
-    w: usize,
-    h: usize,
-    colour: u32,
-) {
-    let x_end = (x + w).min(buf_w);
-    let y_end = (y + h).min(buf_h);
-    for py in y..y_end {
-        for px in x..x_end {
-            buffer[py * buf_w + px] = colour;
+struct Frame<'a> {
+    pixels: &'a mut [u32],
+    width: usize,
+    height: usize,
+}
+
+impl Frame<'_> {
+    fn fill_rect(&mut self, x: usize, y: usize, width: usize, height: usize, colour: u32) {
+        let x_end = x.saturating_add(width).min(self.width);
+        let y_end = y.saturating_add(height).min(self.height);
+        for py in y..y_end {
+            for px in x..x_end {
+                self.pixels[py * self.width + px] = colour;
+            }
         }
     }
 }
@@ -171,6 +170,7 @@ impl App {
         let mut buffer = surface.buffer_mut().unwrap();
         let w = buffer.width().get() as usize;
         let h = buffer.height().get() as usize;
+        let mut frame = Frame { pixels: &mut *buffer, width: w, height: h };
         let scale = window.scale_factor();
         let s = |v: f32| (v * scale as f32) as usize;
 
@@ -179,7 +179,7 @@ impl App {
         for px in buffer.iter_mut() {
             *px = bg;
         }
-        fill_rect(&mut buffer, w, h, 0, 0, sidebar_w, h, rgb(0x11, 0x18, 0x27));
+        frame.fill_rect(0, 0, sidebar_w, h, rgb(0x11, 0x18, 0x27));
 
         let icon = s(48.0);
         let gap = s(12.0);
@@ -190,38 +190,26 @@ impl App {
                 break;
             }
             if i == self.selected {
-                fill_rect(
-                    &mut buffer,
-                    w,
-                    h,
-                    pad - s(3.0),
+                frame.fill_rect(pad - s(3.0),
                     y - s(3.0),
                     icon + s(6.0),
                     icon + s(6.0),
                     rgb(0xff, 0xff, 0xff),
                 );
             }
-            fill_rect(&mut buffer, w, h, pad, y, icon, icon, app.colour);
+            frame.fill_rect(pad, y, icon, icon, app.colour);
         }
 
         let main_x = sidebar_w;
         let main_w = w.saturating_sub(main_x);
         let header_h = s(56.0);
-        fill_rect(
-            &mut buffer,
-            w,
-            h,
-            main_x,
+        frame.fill_rect(main_x,
             0,
             main_w,
             header_h,
             rgb(0xff, 0xff, 0xff),
         );
-        fill_rect(
-            &mut buffer,
-            w,
-            h,
-            main_x,
+        frame.fill_rect(main_x,
             header_h,
             main_w,
             s(4.0),
@@ -238,31 +226,19 @@ impl App {
             Kind::Tasks => {
                 for row in 0..5 {
                     let y = content_y + row * s(64.0);
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        content_x,
+                    frame.fill_rect(content_x,
                         y,
                         content_w,
                         s(48.0),
                         rgb(0xff, 0xff, 0xff),
                     );
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        content_x + s(12.0),
+                    frame.fill_rect(content_x + s(12.0),
                         y + s(12.0),
                         s(24.0),
                         s(24.0),
                         active.colour,
                     );
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        content_x + s(48.0),
+                    frame.fill_rect(content_x + s(48.0),
                         y + s(18.0),
                         content_w / 2,
                         s(12.0),
@@ -278,21 +254,13 @@ impl App {
                     let row = card / cols;
                     let x = content_x + col * (card_w + s(12.0));
                     let y = content_y + row * (s(180.0) + s(12.0));
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        x,
+                    frame.fill_rect(x,
                         y,
                         card_w,
                         s(180.0),
                         rgb(0xff, 0xff, 0xff),
                     );
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        x,
+                    frame.fill_rect(x,
                         y,
                         card_w,
                         s(110.0),
@@ -303,11 +271,7 @@ impl App {
             Kind::Atlas => {
                 for tab in 0..3 {
                     let x = content_x + tab * (content_w / 3);
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        x,
+                    frame.fill_rect(x,
                         content_y,
                         content_w / 3 - s(8.0),
                         s(36.0),
@@ -320,11 +284,7 @@ impl App {
                 }
                 for row in 0..4 {
                     let y = content_y + s(56.0) + row * s(64.0);
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        content_x,
+                    frame.fill_rect(content_x,
                         y,
                         content_w,
                         s(48.0),
@@ -335,21 +295,13 @@ impl App {
             Kind::Pulse => {
                 for card in 0..3 {
                     let y = content_y + card * (s(120.0) + s(12.0));
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        content_x,
+                    frame.fill_rect(content_x,
                         y,
                         content_w,
                         s(120.0),
                         rgb(0xff, 0xff, 0xff),
                     );
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        content_x + s(12.0),
+                    frame.fill_rect(content_x + s(12.0),
                         y + s(12.0),
                         s(36.0),
                         s(36.0),
@@ -360,21 +312,13 @@ impl App {
             Kind::Local => {
                 // Local app pane (v0.1 placeholder): a large card + rows.
                 // Step 5 replaces this with the server's Snapshot tree.
-                fill_rect(
-                    &mut buffer,
-                    w,
-                    h,
-                    content_x,
+                frame.fill_rect(content_x,
                     content_y,
                     content_w,
                     s(120.0),
                     rgb(0xff, 0xff, 0xff),
                 );
-                fill_rect(
-                    &mut buffer,
-                    w,
-                    h,
-                    content_x,
+                frame.fill_rect(content_x,
                     content_y,
                     content_w,
                     s(8.0),
@@ -382,11 +326,7 @@ impl App {
                 );
                 for row in 0..4 {
                     let y = content_y + s(144.0) + row * s(64.0);
-                    fill_rect(
-                        &mut buffer,
-                        w,
-                        h,
-                        content_x,
+                    frame.fill_rect(content_x,
                         y,
                         content_w,
                         s(48.0),
@@ -396,6 +336,7 @@ impl App {
             }
         }
 
+        drop(frame);
         buffer.present().unwrap();
     }
 }
